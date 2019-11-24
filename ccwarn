@@ -334,7 +334,7 @@ elif [ "$cmd" = "dynamic" ]; then
     $GCC -shared -o "lib${dest}.so" $OBJS $LIBS_INTERNAL $LIBS \
         -Wall -Wextra -std=$CSTD $CFLAGS $LDFLAGS
 elif [ "$cmd" = "static" ]; then
-    objs=
+    OBJS=
     for file in "$@"; do
         FILE_EXT=$(check_ext $file | cat)
         filename=$(basename $file)
@@ -362,8 +362,6 @@ fi
 clean;
 
 # Test the program with Clang.
-gccVer=$(gcc --version | head -n1 | awk '{ print $4; }')
-
 if [ "$cmd" = "application" ]; then
     IS_CPP=0
     OBJS=
