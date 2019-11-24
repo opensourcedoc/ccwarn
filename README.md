@@ -1,10 +1,10 @@
 # ccwarn
 
-`ccwarn`, *C* and *C*++ *Warn*ing, checks C or C++ source against both GCC and Clang automatically.
+`ccwarn`, *C* and *C*++ *Warn*ing, tests C or C++ source against both GCC and Clang automatically.
 
 ## Warning
 
-`ccwarn` checks target source by compiling and executing it. Hence, DON'T use `ccwarn` for untrusted source.
+`ccwarn` checks target source by compiling and executing it. Hence, DON'T use `ccwarn` to test untrusted source.
 
 ## Why `ccwarn`?
 
@@ -14,11 +14,11 @@ Nevertheless, it is tedious to write Makefile or another project configuration f
 
 In addition to code warnings, `ccwarn` can be used to test language standard conformity for your code base against both GCC and Clang as well.
 
-`ccwarn` intends to check small code base because `ccwarn` doesn't rely on any external project configuration, unsuitable for large and complex projects.
+`ccwarn` intends to test small code base because `ccwarn` doesn't rely on any external project configuration, unsuitable for large and complex projects.
 
 ## System Requirements
 
-`ccwarn` itself is written in POSIX shell. Besides, `ccwarn` depends on the following tools:
+`ccwarn` itself is written in POSIX shell. Besides a shell, `ccwarn` depends on
 
 * GCC
 * Clang
