@@ -125,6 +125,10 @@ You can adjust the behavior of `ccwarn` with the following environment variables
 
 All environment variables are optional, set with sensible default values.
 
+## Note
+
+If you just want to run some C or C++ source, see [ccrun](https://github.com/cwchentw/ccrun).
+
 ## License
 
 Copyright 2019, Michael Chen; licensed under [MIT](https://opensource.org/licenses/MIT).
