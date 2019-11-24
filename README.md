@@ -78,7 +78,7 @@ $ ccwarn path/to/*.c path/to/*.cpp
 Show help info:
 
 ```
-$ objcheck help
+$ ccwarn help
 ```
 
 ## Environment Variables
