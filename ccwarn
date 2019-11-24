@@ -6,6 +6,9 @@ program="$0";
 version="0.3.0";
 license="MIT";
 
+unsupported_file_extension="unknown"
+unsupported_file_type="empty"
+
 version () {
     echo $version;
 }
@@ -96,8 +99,8 @@ check_ext () {
         echo ".c"
         ;;
     *)
-        echo "Unsupported file: $1"
-        exit 1
+        echo "Unsupported file: $1" >&2
+        echo $unsupported_file_extension
     esac
 }
 
@@ -110,8 +113,8 @@ check_file_type () {
         echo "c++"
         ;;
     *)
-        echo "Unknown file extension: $FILE_EXT"
-        exit 1
+        echo "Unknown file extension: $FILE_EXT" >&2
+        echo $unsupported_file_type
     esac
 }
 
@@ -128,7 +131,7 @@ check_c_standard () {
         c2x)
             ;;
         *)
-            echo "Unsupported C standard: $1"
+            echo "Unsupported C standard: $1" >&2
             exit 1
             ;;
     esac
@@ -147,7 +150,7 @@ check_cpp_standard () {
         c++2a)
             ;;
         *)
-            echo "Unsupported C++ standard: $1"
+            echo "Unsupported C++ standard: $1" >&2
             exit 1;
     esac
 }
@@ -196,46 +199,46 @@ if [ "$cmd" != "application" ] && [ "$cmd" != "static" ] && [ "$cmd" != "dynamic
     cmd="application";
 fi
 
-GCC=$GCC
+GCC=$GCC;
 if [ -z "$GCC" ]; then
-    GCC=gcc
+    GCC="gcc";
 fi
 
-GPP=$GPP
+GPP=$GPP;
 if [ -z "$GPP" ]; then
-    GPP=g++
+    GPP="g++";
 fi
 
-CLANG=$CLANG
+CLANG=$CLANG;
 if [ -z "$CLANG" ]; then
-    CLANG=clang
+    CLANG="clang";
 fi
 
-CLANGPP=$CLANGPP
+CLANGPP=$CLANGPP;
 if [ -z "$CLANGPP" ]; then
-    CLANGPP=clang++
+    CLANGPP="clang++";
 fi
 
-CSTD=$CSTD
+CSTD=$CSTD;
 if [ "$CSTD" = "ansi" ]; then
-    CSTD=c89
+    CSTD="c89";
 fi
 
 if [ -z "$CSTD" ]; then
-    CSTD=c11
+    CSTD="c11"
 fi
 
-check_c_standard $CSTD
+check_c_standard "$CSTD";
 
-CXXSTD=$CXXSTD
+CXXSTD=$CXXSTD;
 if [ -z "$CXXSTD" ]; then
-    CXXSTD=c++17
+    CXXSTD="c++17";
 fi
 
-check_cpp_standard $CXXSTD
+check_cpp_standard $CXXSTD;
 
 # Set dist file
-dest=$OUT_FILE
+dest=$OUT_FILE;
 if [ -z "$dest" ]; then
     dest="out";
 fi
@@ -274,12 +277,19 @@ fi
 if [ "$cmd" = "application" ]; then
     IS_CPP=0
     OBJS=
+    IS_WRONG=0
     for file in "$@"; do
         if [ "$file" = "--" ]; then
             break;
         fi
 
         FILE_EXT=$(check_ext $file | cat)
+
+        if [ $FILE_EXT = $unsupported_file_extension ]; then
+            IS_WRONG=1;
+            continue;
+        fi
+
         filename=$(basename $file)
         objname="${filename%$FILE_EXT}.o"
         OBJS="$objname $OBJS"
@@ -293,6 +303,11 @@ if [ "$cmd" = "application" ]; then
             $GPP -c -o $objname $file -Wall -Wextra -std=$CXXSTD $CXXFLAGS
         fi
     done
+
+    if [ $IS_WRONG -ne 0 ]; then
+        exit 1;
+    fi
+
     if [ $IS_CPP -eq 1 ]; then
         LIBS_INTERNAL="-lstdc++"
     fi
@@ -314,8 +329,19 @@ if [ "$cmd" = "application" ]; then
 elif [ "$cmd" = "dynamic" ]; then
     IS_CPP=0
     OBJS=
+    IS_WRONG=0
     for file in "$@"; do
+        if [ "$file" = "--" ]; then
+            break;
+        fi
+
         FILE_EXT=$(check_ext $file | cat)
+
+        if [ $FILE_EXT = $unsupported_file_extension ]; then
+            IS_WRONG=1;
+            continue;
+        fi
+
         filename=$(basename $file)
         objname="${filename%$FILE_EXT}.o"
         OBJS="$objname $OBJS"
@@ -329,6 +355,11 @@ elif [ "$cmd" = "dynamic" ]; then
             $GPP -fPIC -c -o $objname $file -Wall -Wextra -std=$CXXSTD $CXXFLAGS
         fi
     done
+
+    if [ $IS_WRONG -ne 0 ]; then
+        exit 1;
+    fi
+
     if [ $IS_CPP -eq 1 ]; then
         LIBS_INTERNAL="-lstdc++"
     fi
@@ -336,8 +367,19 @@ elif [ "$cmd" = "dynamic" ]; then
         -Wall -Wextra -std=$CSTD $CFLAGS $LDFLAGS
 elif [ "$cmd" = "static" ]; then
     OBJS=
+    IS_WRONG=0
     for file in "$@"; do
+        if [ "$file" = "--" ]; then
+            break;
+        fi
+
         FILE_EXT=$(check_ext $file | cat)
+
+        if [ $FILE_EXT = $unsupported_file_extension ]; then
+            IS_WRONG=1;
+            continue;
+        fi
+
         filename=$(basename $file)
         objname="${filename%$FILE_EXT}.o"
         OBJS="$objname $OBJS"
@@ -351,6 +393,11 @@ elif [ "$cmd" = "static" ]; then
             $GPP -c -o $objname $file -Wall -Wextra -std=$CXXSTD $CXXFLAGS
         fi
     done
+
+    if [ $IS_WRONG -ne 0 ]; then
+        exit 1;
+    fi
+
     ar rcs "lib${dest}.a" $OBJS
 fi
 
@@ -408,6 +455,10 @@ elif [ "$cmd" = "dynamic" ]; then
     IS_CPP=0
     OBJS=
     for file in "$@"; do
+        if [ "$file" = "--" ]; then
+            break;
+        fi
+
         FILE_EXT=$(check_ext $file | cat)
         filename=$(basename $file)
         objname="${filename%$FILE_EXT}.o"
@@ -431,6 +482,10 @@ elif [ "$cmd" = "static" ]; then
     IS_CPP=0
     OBJS=
     for file in "$@"; do
+        if [ "$file" = "--" ]; then
+            break;
+        fi
+
         FILE_EXT=$(check_ext $file | cat)
         filename=$(basename $file)
         objname="${filename%$FILE_EXT}.o"
