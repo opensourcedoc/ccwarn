@@ -1,6 +1,6 @@
 # ccwarn
 
-`ccwarn`, *C* and *C*++ *Warn*ing, tests C or C++ source against both GCC and Clang automatically.
+`ccwarn`, aka *C* and *C*++ *Warn*ings, tests C or C++ source against both GCC and Clang automatically.
 
 ## Warning
 
@@ -62,15 +62,15 @@ Before using `ccwarn`, add executable mode to it:
 $ chmod +x path/to/ccwarn
 ```
 
-Then, copy `ccwarn` to a valid **$PATH** like *$HOME/bin* to use it.
+Then, copy `ccwarn` to a valid **$PATH** like *$HOME/bin* or */usr/local/bin* to use it.
 
-Test against single C file:
+Test single C file:
 
 ```
 $ ccwarn path/to/file.c
 ```
 
-Test against several files:
+Test multiple files in a project:
 
 ```
 $ ccwarn path/to/*.c
@@ -97,7 +97,7 @@ $ ccwarn path/to/*.c path/to/*.cpp
 Test some executable with arguments:
 
 ```
-$ ccwarn path/to/*.c -- --option param_a param_b param_c
+$ ccwarn path/to/*.c -- --opt param_a param_b param_c
 ```
 
 Show help info:
