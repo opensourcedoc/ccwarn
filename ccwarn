@@ -278,14 +278,14 @@ if [ "$cmd" = "application" ]; then
         if [ "$file" = "--" ]; then
             break;
         fi
-        
+
         FILE_EXT=$(check_ext $file | cat)
         filename=$(basename $file)
         objname="${filename%$FILE_EXT}.o"
         OBJS="$objname $OBJS"
-        
+
         FILE_TYPE=$(check_file_type $FILE_EXT | cat)
-        
+
         if [ "$FILE_TYPE" = "c" ]; then
             $GCC -c -o $objname $file -Wall -Wextra -std=$CSTD $CFLAGS
         elif [ "$FILE_TYPE" = "c++" ]; then
@@ -297,7 +297,7 @@ if [ "$cmd" = "application" ]; then
         LIBS_INTERNAL="-lstdc++"
     fi
     $GCC -o $dest $OBJS $LIBS_INTERNAL $LIBS -Wall -Wextra -std=$CSTD $CFLAGS $LDFLAGS
-    
+
     args=
     is_arg=0
     for arg in "$@"; do
@@ -305,7 +305,7 @@ if [ "$cmd" = "application" ]; then
             is_arg=1;
             continue;
         fi
-        
+
         if [ $is_arg -eq 1 ]; then
             args="$args $arg"
         fi
@@ -319,9 +319,9 @@ elif [ "$cmd" = "dynamic" ]; then
         filename=$(basename $file)
         objname="${filename%$FILE_EXT}.o"
         OBJS="$objname $OBJS"
-        
+
         FILE_TYPE=$(check_file_type $FILE_EXT | cat)
-        
+
         if [ "$FILE_TYPE" = "c" ]; then
             $GCC -fPIC -c -o $objname $file -Wall -Wextra -std=$CSTD $CFLAGS
         elif [ "$FILE_TYPE" = "c++" ]; then
@@ -341,9 +341,9 @@ elif [ "$cmd" = "static" ]; then
         filename=$(basename $file)
         objname="${filename%$FILE_EXT}.o"
         OBJS="$objname $OBJS"
-        
+
         FILE_TYPE=$(check_file_type $FILE_EXT | cat)
-        
+
         if [ "$FILE_TYPE" = "c" ]; then
             $GCC -c -o $objname $file -Wall -Wextra -std=$CSTD $CFLAGS
         elif [ "$FILE_TYPE" = "c++" ]; then
@@ -375,9 +375,9 @@ if [ "$cmd" = "application" ]; then
         filename=$(basename $file)
         objname="${filename%$FILE_EXT}.o"
         OBJS="$objname $OBJS"
-        
+
         FILE_TYPE=$(check_file_type $FILE_EXT | cat)
-        
+
         if [ "$FILE_TYPE" = "c" ]; then
             $CLANG -c -o $objname $file -Wall -Wextra -std=$CSTD $CFLAGS
         elif [ "$FILE_TYPE" = "c++" ]; then
@@ -390,7 +390,7 @@ if [ "$cmd" = "application" ]; then
     fi
     $CLANG -o $dest $OBJS $LIBS_INTERNAL $LIBS -Wall -Wextra -std=$CXSD \
         $CFLAGS $LDFLAGS
-    
+
     args=
     is_arg=0
     for arg in "$@"; do
@@ -398,7 +398,7 @@ if [ "$cmd" = "application" ]; then
             is_arg=1;
             continue;
         fi
-        
+
         if [ $is_arg -eq 1 ]; then
             args="$args $arg"
         fi
@@ -412,9 +412,9 @@ elif [ "$cmd" = "dynamic" ]; then
         filename=$(basename $file)
         objname="${filename%$FILE_EXT}.o"
         OBJS="$objname $OBJS"
-        
+
         FILE_TYPE=$(check_file_type $FILE_EXT | cat)
-        
+
         if [ "$FILE_TYPE" = "c" ]; then
             $CLANG -fPIC -c -o $objname $file -Wall -Wextra -std=$CSTD $CFLAGS
         elif [ "$FILE_TYPE" = "c++" ]; then
@@ -435,9 +435,9 @@ elif [ "$cmd" = "static" ]; then
         filename=$(basename $file)
         objname="${filename%$FILE_EXT}.o"
         OBJS="$objname $OBJS"
-        
+
         FILE_TYPE=$(check_file_type $FILE_EXT | cat)
-        
+
         if [ "$FILE_TYPE" = "c" ]; then
             $CLANG -c -o $objname $file -Wall -Wextra -std=$CSTD $CFLAGS
         elif [ "$FILE_TYPE" = "c++" ]; then
