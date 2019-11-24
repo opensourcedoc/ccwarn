@@ -36,6 +36,24 @@ We tested `ccwarn` on Ubuntu 18.04 LTS. It should work on other Unix-like OSes a
 
 `ccwarn` can handle projects that mix C and C++ together.
 
+## Supported Language Standards
+
+### C Standards
+
+* C89: `c89`, `c90`, `ansi`
+* C99: `c99`, `c9x`
+* C11: `c11`, `c1x`
+* C17: `c17`, `c18`
+* C20: `c2x`
+
+### C++ Standards
+
+* C++98: `c++98`, `c++03`
+* C++11: `c++11`, `c++0x`
+* C++14: `c++14`, `c++1y`
+* C++17: `c++17`, `c++1z`
+* C++20: `c++2a`
+
 ## Usage
 
 Before using `ccwarn`, add executable mode to it:
