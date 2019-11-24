@@ -1,16 +1,18 @@
 # ccwarn
 
-`ccwarn`, *C* and *C*++ *Warn*ing, tests C or C++ source against both GCC and Clang automatically.
+`ccwarn`, *C* and *C*++ *Warn*ing, checks C or C++ source against both GCC and Clang automatically.
 
 ## Warning
 
-`ccwarn` test target source by compiling and executing it. Hence, DON'T use `ccwarn` against untrusted source.
+`ccwarn` checks target source by compiling and executing it. Hence, DON'T use `ccwarn` for untrusted source.
 
 ## Why `ccwarn`?
 
 Both GCC and Clang are popular C and C++ compilers among Unix-like OSes. They can optionally emit non-erroneous warning messages during compilations. Programmers should try their best to reduce those warnings for better code quality.
 
 Nevertheless, it is tedious to write Makefile or another project configuration file for each code base. To address this issue, `ccwarn` automatically tests your code base against both Clang and GCC without any project configuration file.
+
+In addition to code warnings, `ccwarn` can be used to test language standard conformity for your code base against both GCC and Clang as well.
 
 `ccwarn` intends to check small code base because `ccwarn` doesn't rely on any external project configuration, unsuitable for large and complex projects.
 
@@ -31,7 +33,6 @@ We tested `ccwarn` on Ubuntu 18.04 LTS. It should work on other Unix-like OSes a
 
 * *.c* for C source
 * *.cpp*, *.cxx* or *.cc* for C++ source
-
 
 `ccwarn` can handle projects that mix C and C++ together.
 
@@ -75,6 +76,12 @@ Test for C and C++ mixed code base:
 $ ccwarn path/to/*.c path/to/*.cpp
 ```
 
+Test some executable with arguments:
+
+```
+$ ccwarn path/to/*.c -- --option param_a param_b param_c
+```
+
 Show help info:
 
 ```
@@ -89,6 +96,8 @@ You can adjust the behavior of `ccwarn` with the following environment variables
 * **GPP** to set G++ compiler
 * **CLANG** to set Clang compiler
 * **CLANGPP** to set Clang++ compiler
+* **CSTD** to set C standard, default to C11
+* **CXXSTD** to set C++ standard, default to C++17
 * **OUT_FILE** to set the name of a temporary output file
 * **CFLAGS** to set custom include paths and compiler flags for C
 * **CXXFLAGS** to set custom include paths and compiler flags for C++
