@@ -1,0 +1,400 @@
+#!/bin/sh
+# Author: Michael Chen  License: MIT
+
+program="$0"
+version="0.2.0"
+license="MIT"
+
+version () {
+    echo $version
+}
+
+license () {
+    echo $license
+}
+
+help () {
+    echo "Usage: ${program} [command] ..."
+    echo "       ${program} help [command]"
+    echo ""
+    echo "Commands:"
+    echo "\tversion\t\tShow version info and exit"
+    echo "\tlicense\t\tShow license info and exit"
+    echo "\thelp\t\tShow help info and exit"
+    echo "\tapplication\tCompile an application (default)"
+    echo "\tstatic\t\tCompile a static library"
+    echo "\tdynamic\t\tCompile a dynamic library"
+    echo ""
+    echo "Environment variables:"
+    echo "\tGCC\t\t\tSet GCC compiler"
+    echo "\tGPP\t\t\tSet G++ compiler"
+    echo "\tCLANG\t\t\tSet Clang compiler"
+    echo "\tCLANGPP\t\t\tSet Clang++ compiler"
+    echo "\tOUT_FILE\t\tThe name of output file"
+    echo "\tCFLAGS\t\t\tCustom include paths and compiler flags for C"
+    echo "\tCXXFLAGS\t\tCusteom include paths and compiler flags for C++"
+    echo "\tLDFLAGS\t\t\tCustom library paths"
+    echo "\tLIBS\t\t\tCustom library linkage"
+    echo "\tLD_LIBRARY_PATH\t\tCustom binary file paths"
+}
+
+help_version () {
+    echo "Usage: $program version"
+    echo ""
+    echo "Show version info and exit"
+}
+
+help_license () {
+    echo "Usage: $program license"
+    echo ""
+    echo "Show license info and exit"
+}
+
+help_help () {
+    echo "Usage: $program help [command]"
+    echo ""
+    echo "Show help info for [command] and exit"
+}
+
+help_application () {
+    echo "Usage: $program [application] main.m ..."
+    echo ""
+    echo "Test an application against both GCC and Clang"
+}
+
+help_static () {
+    echo "Usage: $program static lib.m ..."
+    echo ""
+    echo "Test a static library against both GCC and Clang"
+}
+
+help_dynamic () {
+    echo "Usage: $program dynamic lib.m ..."
+    echo ""
+    echo "Test a dynamic library against both GCC and Clang"
+}
+
+check_ext () {
+    case $1 in
+    *.cpp)
+        echo ".cpp"
+        ;;
+    *.cxx)
+        echo ".cxx"
+        ;;
+    *.cc)
+        echo ".cc"
+        ;;
+    *.c)
+        echo ".c"
+        ;;
+    *)
+        echo "Unsupported file: $1"
+        exit 1
+    esac
+}
+
+check_file_type () {
+    FILE_EXT=$1
+
+    if [ "$FILE_EXT" = ".c" ]; then
+        echo "c"
+    elif [ "$FILE_EXT" = ".cpp" ] || [ "$FILE_EXT" = ".cxx" ] || [ "$FILE_EXT" = ".cc" ]; then
+        echo "c++"
+    else
+        echo "Unknown file extension: $FILE_EXT"
+        exit 1
+    fi
+}
+
+cmd=$1
+if [ "$cmd" = "version" ]; then
+    version;
+    exit 0;
+fi
+
+if [ "$cmd" = "license" ]; then
+    license;
+    exit 0;
+fi
+
+if [ "$cmd" = "help" ]; then
+    subcmd=$2
+
+    if [ "$subcmd" = "version" ]; then
+        help_version;
+    elif [ "$subcmd" = "license" ]; then
+        help_license;
+    elif [ "$subcmd" = "help" ]; then
+        help_help;
+    elif [ "$subcmd" = "application" ]; then
+        help_application;
+    elif [ "$subcmd" = "static" ]; then
+        help_static;
+    elif [ "$subcmd" = "dynamic" ]; then
+        help_dynamic;
+    elif [ "$subcmd" = "" ]; then
+        help;
+    else
+        echo "Unknown subcommand";
+        exit 1;
+    fi
+
+    exit 0;
+fi
+
+if [ "$cmd" = "application" ] || [ "$cmd" = "static" ] || [ "$cmd" = "dynamic" ]; then
+    shift;
+fi
+
+if [ "$cmd" != "application" ] && [ "$cmd" != "static" ] && [ "$cmd" != "dynamic" ]; then
+    cmd="application";
+fi
+
+GCC=$GCC
+if [ -z "$GCC" ]; then
+    GCC=gcc
+fi
+
+GPP=$GPP
+if [ -z "$GPP" ]; then
+    GPP=g++
+fi
+
+CLANG=$CLANG
+if [ -z "$CLANG" ]; then
+    CLANG=clang
+fi
+
+CLANGPP=$CLANGPP
+if [ -z "$CLANGPP" ]; then
+    CLANGPP=clang++
+fi
+
+# Set dist file
+dest=$OUT_FILE
+if [ -z "$dest" ]; then
+    dest="out";
+fi
+
+if [ -f "$dest" ] || [ -d "$dest" ]; then
+    echo "File ${dest} exists in directory"
+    exit 1
+fi
+
+clean () {
+    rm -f $dest "lib${dest}.a" "lib${dest}.so" *.o;
+}
+
+# Check whether GCC exists on the host.
+$GCC --version > /dev/null
+if [ "$?" -ne 0 ]; then
+    echo "Please install gcc and gobjc";
+    exit 1;
+fi
+
+# Check whether `g++` exists on the host.
+$GPP --version > /dev/null
+if [ "$?" -ne 0 ]; then
+    echo "Please install g++";
+    exit 1;
+fi
+
+# Check whether Clang exists on the host.
+$CLANG --version > /dev/null
+if [ "$?" -ne 0 ]; then
+    echo "Please install clang";
+    exit 1;
+fi
+
+# Test the program with GCC.
+if [ "$cmd" = "application" ]; then
+    IS_CPP=0
+    OBJS=
+    for file in "$@"; do
+        if [ "$file" = "--" ]; then
+            break;
+        fi
+        
+        FILE_EXT=$(check_ext $file | cat)
+        filename=$(basename $file)
+        objname="${filename%$FILE_EXT}.o"
+        OBJS="$objname $OBJS"
+        
+        FILE_TYPE=$(check_file_type $FILE_EXT | cat)
+        
+        if [ "$FILE_TYPE" = "c" ]; then
+            $GCC -c -o $objname $file -Wall -Wextra $CFLAGS
+        elif [ "$FILE_TYPE" = "c++" ]; then
+            IS_CPP=1
+            $GPP -c -o $objname $file -Wall -Wextra $CXXFLAGS
+        fi
+    done
+    if [ $IS_CPP -eq 1 ]; then
+        LIBS_INTERNAL="-lstdc++"
+    fi
+    $GCC -o $dest $OBJS $LIBS_INTERNAL $LIBS -Wall -Wextra $CFLAGS $LDFLAGS
+    
+    args=
+    is_arg=0
+    for arg in "$@"; do
+        if [ "$arg" = "--" ]; then
+            is_arg=1;
+            continue;
+        fi
+        
+        if [ $is_arg -eq 1 ]; then
+            args="$args $arg"
+        fi
+    done
+    LD_LIBRARY_PATH=$LD_LIBRARY_PATH ./$dest $args
+elif [ "$cmd" = "dynamic" ]; then
+    IS_CPP=0
+    OBJS=
+    for file in "$@"; do
+        FILE_EXT=$(check_ext $file | cat)
+        filename=$(basename $file)
+        objname="${filename%$FILE_EXT}.o"
+        OBJS="$objname $OBJS"
+        
+        FILE_TYPE=$(check_file_type $FILE_EXT | cat)
+        
+        if [ "$FILE_TYPE" = "c" ]; then
+            $GCC -fPIC -c -o $objname $file -Wall -Wextra $CFLAGS
+        elif [ "$FILE_TYPE" = "c++" ]; then
+            IS_CPP=1
+            $GPP -fPIC -c -o $objname $file -Wall -Wextra $CXXFLAGS
+        fi
+    done
+    if [ $IS_CPP -eq 1 ]; then
+        LIBS_INTERNAL="-lstdc++"
+    fi
+    $GCC -shared -o "lib${dest}.so" $OBJS $LIBS_INTERNAL $LIBS \
+        -Wall -Wextra $CFLAGS $LDFLAGS
+elif [ "$cmd" = "static" ]; then
+    objs=
+    for file in "$@"; do
+        FILE_EXT=$(check_ext $file | cat)
+        filename=$(basename $file)
+        objname="${filename%$FILE_EXT}.o"
+        OBJS="$objname $OBJS"
+        
+        FILE_TYPE=$(check_file_type $FILE_EXT | cat)
+        
+        if [ "$FILE_TYPE" = "c" ]; then
+            $GCC -c -o $objname $file -Wall -Wextra $CFLAGS
+        elif [ "$FILE_TYPE" = "c++" ]; then
+            IS_CPP=1
+            $GPP -c -o $objname $file -Wall -Wextra $CXXFLAGS
+        fi
+    done
+    ar rcs "lib${dest}.a" $OBJS
+fi
+
+if [ "$?" -ne 0 ]; then
+    echo "Wrong program compiled by GCC";
+    clean;
+    exit 1;
+fi
+
+clean;
+
+# Test the program with Clang.
+gccVer=$(gcc --version | head -n1 | awk '{ print $4; }')
+
+if [ "$cmd" = "application" ]; then
+    IS_CPP=0
+    OBJS=
+    for file in "$@"; do
+        if [ "$file" = "--" ]; then
+            break;
+        fi
+
+        FILE_EXT=$(check_ext $file | cat)
+        filename=$(basename $file)
+        objname="${filename%$FILE_EXT}.o"
+        OBJS="$objname $OBJS"
+        
+        FILE_TYPE=$(check_file_type $FILE_EXT | cat)
+        
+        if [ "$FILE_TYPE" = "c" ]; then
+            $CLANG -c -o $objname $file -Wall -Wextra $CFLAGS
+        elif [ "$FILE_TYPE" = "c++" ]; then
+            IS_CPP=1
+            $CLANGPP -c -o $objname $file -Wall -Wextra $CXXFLAGS
+        fi
+    done
+    if [ $IS_CPP -eq 1 ]; then
+        LIBS_INTERNAL="-lstdc++"
+    fi
+    $CLANG -o $dest $OBJS $LIBS_INTERNAL $LIBS -Wall -Wextra $CFLAGS $LDFLAGS
+    
+    args=
+    is_arg=0
+    for arg in "$@"; do
+        if [ "$arg" = "--" ]; then
+            is_arg=1;
+            continue;
+        fi
+        
+        if [ $is_arg -eq 1 ]; then
+            args="$args $arg"
+        fi
+    done
+    LD_LIBRARY_PATH=$LD_LIBRARY_PATH ./$dest $args
+elif [ "$cmd" = "dynamic" ]; then
+    IS_CPP=0
+    OBJS=
+    for file in "$@"; do
+        FILE_EXT=$(check_ext $file | cat)
+        filename=$(basename $file)
+        objname="${filename%$FILE_EXT}.o"
+        OBJS="$objname $OBJS"
+        
+        FILE_TYPE=$(check_file_type $FILE_EXT | cat)
+        
+        if [ "$FILE_TYPE" = "c" ]; then
+            $CLANG -fPIC -c -o $objname $file -Wall -Wextra $CFLAGS
+        elif [ "$FILE_TYPE" = "c++" ]; then
+            IS_CPP=1
+            $CLANGPP -fPIC -c -o $objname $file -Wall -Wextra $CXXFLAGS
+        fi
+    done
+    if [ $IS_CPP -eq 1 ]; then
+        LIBS_INTERNAL="-lstdc++"
+    fi
+    $CLANG -shared -o "lib${dest}.so" $OBJS $LIBS_INTERNAL $LIBS \
+        -Wall -Wextra $CFLAGS $LDFLAGS
+elif [ "$cmd" = "static" ]; then
+    IS_CPP=0
+    OBJS=
+    for file in "$@"; do
+        FILE_EXT=$(check_ext $file | cat)
+        filename=$(basename $file)
+        objname="${filename%$FILE_EXT}.o"
+        OBJS="$objname $OBJS"
+        
+        FILE_TYPE=$(check_file_type $FILE_EXT | cat)
+        
+        if [ "$FILE_TYPE" = "c" ]; then
+            $CLANG -c -o $objname $file -Wall -Wextra $CFLAGS
+        elif [ "$FILE_TYPE" = "c++" ]; then
+            IS_CPP=1
+            $CLANGPP -c -o $objname $file -Wall -Wextra $CXXFLAGS
+        fi
+    done
+    if [ $IS_CPP -eq 1 ]; then
+        LIBS_INTERNAL="-lstdc++"
+    fi
+    ar rcs "lib${dest}.a" $OBJS
+fi
+
+if [ "$?" -ne 0 ]; then
+    echo "Wrong program compiled by Clang";
+    clean;
+    exit 1;
+fi
+
+clean;
+
+exit 0;
