@@ -99,35 +99,28 @@ check_ext () {
 }
 
 check_file_type () {
-    FILE_EXT=$1
-
-    if [ "$FILE_EXT" = ".c" ]; then
+    case $1 in
+    .c)
         echo "c"
-    elif [ "$FILE_EXT" = ".cpp" ] || [ "$FILE_EXT" = ".cxx" ] || [ "$FILE_EXT" = ".cc" ]; then
+        ;;
+    .cpp|.cxx|.cc)
         echo "c++"
-    else
+        ;;
+    *)
         echo "Unknown file extension: $FILE_EXT"
         exit 1
-    fi
+    esac
 }
 
 check_c_standard () {
     case $1 in
-        c89)
+        c89|c90)
             ;;
-        c90)
+        c99|c9x)
             ;;
-        c99)
+        c11|c1x)
             ;;
-        c9x)
-            ;;
-        c11)
-            ;;
-        c1x)
-            ;;
-        c17)
-            ;;
-        c18)
+        c17|c18)
             ;;
         c2x)
             ;;
@@ -140,21 +133,13 @@ check_c_standard () {
 
 check_cpp_standard () {
     case $1 in
-        c++98)
+        c++98|c++03)
             ;;
-        c++03)
+        c++11|c++0x)
             ;;
-        c++11)
+        c++14|c++1y)
             ;;
-        c++0x)
-            ;;
-        c++14)
-            ;;
-        c++1y)
-            ;;
-        c++17)
-            ;;
-        c++1z)
+        c++17|c++1z)
             ;;
         c++2a)
             ;;
