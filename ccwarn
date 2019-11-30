@@ -6,20 +6,23 @@ program="$0";
 version="0.3.0";
 license="MIT";
 
-unsupported_file_extension="unknown"
-unsupported_file_type="empty"
+unsupported_file_extension="unknown";
+unsupported_file_type="empty";
 
-version () {
+version ()
+{
     echo $version;
 }
 
-license () {
+license ()
+{
     echo $license;
 }
 
 #--------1---------2---------3---------4---------5---------6---------7---------8
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
-help_info () {
+help_info ()
+{
     printf "Usage: %s [command] ...\n" "$program";
     printf "       %s help [command]\n" "$program";
     printf "\n";
@@ -48,44 +51,60 @@ help_info () {
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 #--------1---------2---------3---------4---------5---------6---------7---------8
 
-help_version () {
-    echo "Usage: $program version"
-    echo ""
-    echo "Show version info and exit"
+help_version ()
+{
+    echo "Usage: $program version";
+    echo "";
+    echo "Show version info and exit";
 }
 
-help_license () {
-    echo "Usage: $program license"
-    echo ""
-    echo "Show license info and exit"
+help_license ()
+{
+    echo "Usage: $program license";
+    echo "";
+    echo "Show license info and exit";
 }
 
-help_help () {
-    echo "Usage: $program help [command]"
-    echo ""
-    echo "Show help info for [command] and exit"
+help_help ()
+{
+    echo "Usage: $program help [command]";
+    echo "";
+    echo "Show help info for [command] and exit";
 }
 
-help_application () {
-    echo "Usage: $program [application] main.m ..."
-    echo ""
-    echo "Test an application against both GCC and Clang"
+help_application ()
+{
+    echo "Usage: $program [application] main.m ...";
+    echo "";
+    echo "Test an application against both GCC and Clang";
 }
 
-help_static () {
-    echo "Usage: $program static lib.m ..."
-    echo ""
-    echo "Test a static library against both GCC and Clang"
+help_static ()
+{
+    echo "Usage: $program static lib.m ...";
+    echo "";
+    echo "Test a static library against both GCC and Clang";
 }
 
-help_dynamic () {
-    echo "Usage: $program dynamic lib.m ..."
-    echo ""
-    echo "Test a dynamic library against both GCC and Clang"
+help_dynamic ()
+{
+    echo "Usage: $program dynamic lib.m ...";
+    echo "";
+    echo "Test a dynamic library against both GCC and Clang";
 }
 
-check_ext () {
-    case $1 in
+# check_ext extension
+check_ext ()
+{
+    local ext=$1;
+
+    if [ -z "$ext" ];
+    then
+        echo "No valid file extension" >&2;
+        exit 1;
+    fi
+
+    case "$ext" in
     *.cpp)
         echo ".cpp"
         ;;
@@ -104,8 +123,18 @@ check_ext () {
     esac
 }
 
-check_file_type () {
-    case $1 in
+# check_file_type extension
+check_file_type ()
+{
+    local ext=$1;
+
+    if [ -z "$ext" ];
+    then
+        echo "No valid file extension" >&2;
+        exit 1;
+    fi
+
+    case "$ext" in
     .c)
         echo "c"
         ;;
@@ -118,8 +147,18 @@ check_file_type () {
     esac
 }
 
-check_c_standard () {
-    case $1 in
+# check_c_standard standard
+check_c_standard ()
+{
+    local std=$1;
+
+    if [ -z "$std" ];
+    then
+        echo "No valid C standard" >&2;
+        exit 1;
+    fi
+
+    case "$std" in
         c89|c90)
             ;;
         c99|c9x)
@@ -137,8 +176,18 @@ check_c_standard () {
     esac
 }
 
-check_cpp_standard () {
-    case $1 in
+# check_cpp_standard standard
+check_cpp_standard ()
+{
+    local std=$1;
+
+    if [ -z "$std" ];
+    then
+        echo "No valid C++ standard" >&2;
+        exit 1;
+    fi
+
+    case "$std" in
         c++98|c++03)
             ;;
         c++11|c++0x)
@@ -156,32 +205,42 @@ check_cpp_standard () {
 }
 
 cmd=$1
-if [ "$cmd" = "version" ]; then
+if [ "$cmd" = "version" ];
+then
     version;
     exit 0;
 fi
 
-if [ "$cmd" = "license" ]; then
+if [ "$cmd" = "license" ];
+then
     license;
     exit 0;
 fi
 
-if [ "$cmd" = "help" ]; then
+if [ "$cmd" = "help" ];
+then
     subcmd=$2
 
-    if [ "$subcmd" = "version" ]; then
+    if [ "$subcmd" = "version" ];
+    then
         help_version;
-    elif [ "$subcmd" = "license" ]; then
+    elif [ "$subcmd" = "license" ];
+    then
         help_license;
-    elif [ "$subcmd" = "help" ]; then
+    elif [ "$subcmd" = "help" ];
+    then
         help_help;
-    elif [ "$subcmd" = "application" ]; then
+    elif [ "$subcmd" = "application" ];
+    then
         help_application;
-    elif [ "$subcmd" = "static" ]; then
+    elif [ "$subcmd" = "static" ];
+    then
         help_static;
-    elif [ "$subcmd" = "dynamic" ]; then
+    elif [ "$subcmd" = "dynamic" ];
+    then
         help_dynamic;
-    elif [ "$subcmd" = "" ]; then
+    elif [ "$subcmd" = "" ];
+    then
         help_info;
     else
         echo "Unknown subcommand: $2" >&2;
@@ -191,47 +250,56 @@ if [ "$cmd" = "help" ]; then
     exit 0;
 fi
 
-if [ "$cmd" = "application" ] || [ "$cmd" = "static" ] || [ "$cmd" = "dynamic" ]; then
+if [ "$cmd" = "application" ] || [ "$cmd" = "static" ] || [ "$cmd" = "dynamic" ];
+then
     shift;
 fi
 
-if [ "$cmd" != "application" ] && [ "$cmd" != "static" ] && [ "$cmd" != "dynamic" ]; then
+if [ "$cmd" != "application" ] && [ "$cmd" != "static" ] && [ "$cmd" != "dynamic" ];
+then
     cmd="application";
 fi
 
 GCC=$GCC;
-if [ -z "$GCC" ]; then
+if [ -z "$GCC" ];
+then
     GCC="gcc";
 fi
 
 GPP=$GPP;
-if [ -z "$GPP" ]; then
+if [ -z "$GPP" ];
+then
     GPP="g++";
 fi
 
 CLANG=$CLANG;
-if [ -z "$CLANG" ]; then
+if [ -z "$CLANG" ];
+then
     CLANG="clang";
 fi
 
 CLANGPP=$CLANGPP;
-if [ -z "$CLANGPP" ]; then
+if [ -z "$CLANGPP" ];
+then
     CLANGPP="clang++";
 fi
 
 CSTD=$CSTD;
-if [ "$CSTD" = "ansi" ]; then
+if [ "$CSTD" = "ansi" ];
+then
     CSTD="c89";
 fi
 
-if [ -z "$CSTD" ]; then
-    CSTD="c11"
+if [ -z "$CSTD" ];
+then
+    CSTD="c11";
 fi
 
 check_c_standard "$CSTD";
 
 CXXSTD=$CXXSTD;
-if [ -z "$CXXSTD" ]; then
+if [ -z "$CXXSTD" ];
+then
     CXXSTD="c++17";
 fi
 
@@ -239,136 +307,158 @@ check_cpp_standard $CXXSTD;
 
 # Set dist file
 dest=$OUT_FILE;
-if [ -z "$dest" ]; then
+if [ -z "$dest" ];
+then
     dest="out";
 fi
 
-if [ -f "$dest" ] || [ -d "$dest" ]; then
-    echo "File ${dest} exists in directory"
-    exit 1
+if [ -f "$dest" ] || [ -d "$dest" ];
+then
+    echo "File or directory ${dest} exists in directory" >&2;
+    exit 1;
 fi
 
-clean () {
-    rm -f $dest "lib${dest}.a" "lib${dest}.so" *.o;
+clean ()
+{
+    rm -f $dest "lib${dest}.a" "lib${dest}.so" -- *.o;
 }
 
 # Check whether GCC exists on the host.
-$GCC --version > /dev/null
-if [ "$?" -ne 0 ]; then
-    echo "Please install gcc and gobjc";
+if ! command -v $GCC 2>/dev/null 1>&2;
+then
+    echo "Please install gcc";
     exit 1;
 fi
 
 # Check whether `g++` exists on the host.
-$GPP --version > /dev/null
-if [ "$?" -ne 0 ]; then
+if ! command -v $GPP 2>/dev/null 1>&2;
+then
     echo "Please install g++";
     exit 1;
 fi
 
 # Check whether Clang exists on the host.
-$CLANG --version > /dev/null
-if [ "$?" -ne 0 ]; then
+if ! command -v $CLANG 2>/dev/null 1>&2;
+then
     echo "Please install clang";
     exit 1;
 fi
 
 # Test the program with GCC.
-if [ "$cmd" = "application" ]; then
-    IS_CPP=0
-    OBJS=
-    IS_WRONG=0
-    for file in "$@"; do
+if [ "$cmd" = "application" ];
+then
+    IS_CPP=0;
+    OBJS="";
+    IS_WRONG=0;
+    for file in $@;
+    do
         if [ "$file" = "--" ]; then
             break;
         fi
 
-        FILE_EXT=$(check_ext $file | cat)
+        FILE_EXT=$(check_ext "$file");
 
-        if [ $FILE_EXT = $unsupported_file_extension ]; then
+        if [ "$FILE_EXT" = "$unsupported_file_extension" ];
+        then
             IS_WRONG=1;
             continue;
         fi
 
-        filename=$(basename $file)
-        objname="${filename%$FILE_EXT}.o"
-        OBJS="$objname $OBJS"
+        filename=$(basename "$file");
+        objname="${filename%$FILE_EXT}.o";
+        OBJS="$objname $OBJS";
 
-        FILE_TYPE=$(check_file_type $FILE_EXT | cat)
+        FILE_TYPE=$(check_file_type "$FILE_EXT");
 
-        if [ "$FILE_TYPE" = "c" ]; then
-            $GCC -c -o $objname $file -Wall -Wextra -std=$CSTD $CFLAGS
-        elif [ "$FILE_TYPE" = "c++" ]; then
+        if [ "$FILE_TYPE" = "c" ];
+        then
+            $GCC -c -o "$objname" "$file" -Wall -Wextra -std=$CSTD $CFLAGS;
+        elif [ "$FILE_TYPE" = "c++" ];
+        then
             IS_CPP=1
-            $GPP -c -o $objname $file -Wall -Wextra -std=$CXXSTD $CXXFLAGS
+            $GPP -c -o "$objname" "$file" -Wall -Wextra -std=$CXXSTD $CXXFLAGS
         fi
     done
 
-    if [ $IS_WRONG -ne 0 ]; then
+    if [ $IS_WRONG -ne 0 ];
+    then
         exit 1;
     fi
 
-    if [ $IS_CPP -eq 1 ]; then
-        LIBS_INTERNAL="-lstdc++"
+    if [ $IS_CPP -eq 1 ];
+    then
+        LIBS_INTERNAL="-lstdc++";
     fi
-    $GCC -o $dest $OBJS $LIBS_INTERNAL $LIBS -Wall -Wextra -std=$CSTD $CFLAGS $LDFLAGS
+    $GCC -o $dest $OBJS "$LIBS_INTERNAL" $LIBS -Wall -Wextra -std=$CSTD $CFLAGS $LDFLAGS;
 
-    args=
-    is_arg=0
-    for arg in "$@"; do
-        if [ "$arg" = "--" ]; then
+    args="";
+    is_arg=0;
+    for arg in $@; do
+        if [ "$arg" = "--" ];
+        then
             is_arg=1;
             continue;
         fi
 
-        if [ $is_arg -eq 1 ]; then
-            args="$args $arg"
+        if [ $is_arg -eq 1 ];
+        then
+            args="$args $arg";
         fi
     done
     LD_LIBRARY_PATH=$LD_LIBRARY_PATH ./$dest $args
-elif [ "$cmd" = "dynamic" ]; then
-    IS_CPP=0
-    OBJS=
-    IS_WRONG=0
-    for file in "$@"; do
-        if [ "$file" = "--" ]; then
+elif [ "$cmd" = "dynamic" ];
+then
+    IS_CPP=0;
+    OBJS="";
+    IS_WRONG=0;
+    for file in $@;
+    do
+        if [ "$file" = "--" ];
+        then
             break;
         fi
 
-        FILE_EXT=$(check_ext $file | cat)
+        FILE_EXT=$(check_ext "$file");
 
-        if [ $FILE_EXT = $unsupported_file_extension ]; then
+        if [ "$FILE_EXT" = "$unsupported_file_extension" ];
+        then
             IS_WRONG=1;
             continue;
         fi
 
-        filename=$(basename $file)
-        objname="${filename%$FILE_EXT}.o"
-        OBJS="$objname $OBJS"
+        filename=$(basename "$file");
+        objname="${filename%$FILE_EXT}.o";
+        OBJS="$objname $OBJS";
 
-        FILE_TYPE=$(check_file_type $FILE_EXT | cat)
+        FILE_TYPE=$(check_file_type "$FILE_EXT");
 
-        if [ "$FILE_TYPE" = "c" ]; then
-            $GCC -fPIC -c -o $objname $file -Wall -Wextra -std=$CSTD $CFLAGS
-        elif [ "$FILE_TYPE" = "c++" ]; then
-            IS_CPP=1
-            $GPP -fPIC -c -o $objname $file -Wall -Wextra -std=$CXXSTD $CXXFLAGS
+        if [ "$FILE_TYPE" = "c" ];
+        then
+            $GCC -fPIC -c -o "$objname" "$file" -Wall -Wextra -std=$CSTD $CFLAGS;
+        elif [ "$FILE_TYPE" = "c++" ];
+        then
+            IS_CPP=1;
+            $GPP -fPIC -c -o "$objname" "$file" -Wall -Wextra -std=$CXXSTD $CXXFLAGS;
         fi
     done
 
-    if [ $IS_WRONG -ne 0 ]; then
+    if [ $IS_WRONG -ne 0 ];
+    then
         exit 1;
     fi
 
-    if [ $IS_CPP -eq 1 ]; then
+    if [ $IS_CPP -eq 1 ];
+    then
         LIBS_INTERNAL="-lstdc++"
     fi
-    $GCC -shared -o "lib${dest}.so" $OBJS $LIBS_INTERNAL $LIBS \
-        -Wall -Wextra -std=$CSTD $CFLAGS $LDFLAGS
-elif [ "$cmd" = "static" ]; then
-    OBJS=
-    IS_WRONG=0
-    for file in "$@"; do
+    $GCC -shared -o "lib${dest}.so" $OBJS "$LIBS_INTERNAL" $LIBS \
+        -Wall -Wextra -std=$CSTD $CFLAGS $LDFLAGS;
+elif [ "$cmd" = "static" ];
+then
+    OBJS="";
+    IS_WRONG=0;
+    for file in $@;
+    do
         if [ "$file" = "--" ]; then
             break;
         fi
