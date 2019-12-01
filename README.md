@@ -111,9 +111,9 @@ $ ccwarn help
 You can adjust the behavior of `ccwarn` with the following environment variables:
 
 * **GCC** to set GCC compiler
-* **GPP** to set G++ compiler
+* **GXX** to set G++ compiler
 * **CLANG** to set Clang compiler
-* **CLANGPP** to set Clang++ compiler
+* **CLANGXX** to set Clang++ compiler
 * **CSTD** to set C standard, default to C11
 * **CXXSTD** to set C++ standard, default to C++17
 * **OUT_FILE** to set the name of a temporary output file

@@ -36,9 +36,9 @@ help_info ()
     printf "\n";
     printf "Environment variables:\n";
     printf "\tGCC\t\t\tSet GCC compiler\n";
-    printf "\tGPP\t\t\tSet G++ compiler\n";
+    printf "\tGXX\t\t\tSet G++ compiler\n";
     printf "\tCLANG\t\t\tSet Clang compiler\n";
-    printf "\tCLANGPP\t\t\tSet Clang++ compiler\n";
+    printf "\tCLANGXX\t\t\tSet Clang++ compiler\n";
     printf "\tOUT_FILE\t\tThe name of output file\n";
     printf "\tCSTD\t\t\tSet C standard, default to C11\n";
     printf "\tCXXSTD\t\t\tSet C++ standard, default to C++17\n";
@@ -118,8 +118,8 @@ check_ext ()
         echo ".c"
         ;;
     *)
-        echo "Unsupported file: $1" >&2
-        echo $unsupported_file_extension
+        echo "Unsupported file: $1" >&2;
+        echo "$unsupported_file_extension";
     esac
 }
 
@@ -135,15 +135,16 @@ check_file_type ()
     fi
 
     case "$ext" in
-    .c)
-        echo "c"
-        ;;
-    .cpp|.cxx|.cc)
-        echo "c++"
-        ;;
-    *)
-        echo "Unknown file extension: $FILE_EXT" >&2
-        echo $unsupported_file_type
+        .c)
+            echo "c"
+            ;;
+        .cpp|.cxx|.cc)
+            echo "c++"
+            ;;
+        *)
+            echo "Unknown file extension: $FILE_EXT" >&2;
+            echo $unsupported_file_type;
+            ;;
     esac
 }
 
@@ -170,8 +171,8 @@ check_c_standard ()
         c2x)
             ;;
         *)
-            echo "Unsupported C standard: $1" >&2
-            exit 1
+            echo "Unsupported C standard: $1" >&2;
+            exit 1;
             ;;
     esac
 }
@@ -199,7 +200,7 @@ check_cpp_standard ()
         c++2a)
             ;;
         *)
-            echo "Unsupported C++ standard: $1" >&2
+            echo "Unsupported C++ standard: $1" >&2;
             exit 1;
     esac
 }
@@ -266,10 +267,10 @@ then
     GCC="gcc";
 fi
 
-GPP=$GPP;
-if [ -z "$GPP" ];
+GXX=$GXX;
+if [ -z "$GXX" ];
 then
-    GPP="g++";
+    GXX="g++";
 fi
 
 CLANG=$CLANG;
@@ -278,10 +279,10 @@ then
     CLANG="clang";
 fi
 
-CLANGPP=$CLANGPP;
-if [ -z "$CLANGPP" ];
+CLANGXX=$CLANGXX;
+if [ -z "$CLANGXX" ];
 then
-    CLANGPP="clang++";
+    CLANGXX="clang++";
 fi
 
 CSTD=$CSTD;
@@ -331,7 +332,7 @@ then
 fi
 
 # Check whether `g++` exists on the host.
-if ! command -v $GPP 2>/dev/null 1>&2;
+if ! command -v $GXX 2>/dev/null 1>&2;
 then
     echo "Please install g++";
     exit 1;
@@ -345,6 +346,7 @@ then
 fi
 
 # Test the program with GCC.
+echo "Test target source against GCC";
 if [ "$cmd" = "application" ];
 then
     IS_CPP=0;
@@ -372,11 +374,11 @@ then
 
         if [ "$FILE_TYPE" = "c" ];
         then
-            $GCC -c -o "$objname" "$file" -Wall -Wextra -std=$CSTD $CFLAGS;
+            $GCC -c -o $objname $file -Wall -Wextra -std=$CSTD $CFLAGS;
         elif [ "$FILE_TYPE" = "c++" ];
         then
-            IS_CPP=1
-            $GPP -c -o "$objname" "$file" -Wall -Wextra -std=$CXXSTD $CXXFLAGS
+            IS_CPP=1;
+            $GXX -c -o $objname $file -Wall -Wextra -std=$CXXSTD $CXXFLAGS;
         fi
     done
 
@@ -389,7 +391,7 @@ then
     then
         LIBS_INTERNAL="-lstdc++";
     fi
-    $GCC -o $dest $OBJS "$LIBS_INTERNAL" $LIBS -Wall -Wextra -std=$CSTD $CFLAGS $LDFLAGS;
+    $GCC -o $dest $OBJS $LIBS_INTERNAL $LIBS -Wall -Wextra -std=$CSTD $CFLAGS $LDFLAGS;
 
     args="";
     is_arg=0;
@@ -405,7 +407,7 @@ then
             args="$args $arg";
         fi
     done
-    LD_LIBRARY_PATH=$LD_LIBRARY_PATH ./$dest $args
+    LD_LIBRARY_PATH=$LD_LIBRARY_PATH ./$dest $args;
 elif [ "$cmd" = "dynamic" ];
 then
     IS_CPP=0;
@@ -438,7 +440,7 @@ then
         elif [ "$FILE_TYPE" = "c++" ];
         then
             IS_CPP=1;
-            $GPP -fPIC -c -o "$objname" "$file" -Wall -Wextra -std=$CXXSTD $CXXFLAGS;
+            $GXX -fPIC -c -o "$objname" "$file" -Wall -Wextra -std=$CXXSTD $CXXFLAGS;
         fi
     done
 
@@ -449,9 +451,9 @@ then
 
     if [ $IS_CPP -eq 1 ];
     then
-        LIBS_INTERNAL="-lstdc++"
+        LIBS_INTERNAL="-lstdc++";
     fi
-    $GCC -shared -o "lib${dest}.so" $OBJS "$LIBS_INTERNAL" $LIBS \
+    $GCC -shared -o "lib${dest}.so" $OBJS $LIBS_INTERNAL $LIBS \
         -Wall -Wextra -std=$CSTD $CFLAGS $LDFLAGS;
 elif [ "$cmd" = "static" ];
 then
@@ -459,39 +461,45 @@ then
     IS_WRONG=0;
     for file in $@;
     do
-        if [ "$file" = "--" ]; then
+        if [ "$file" = "--" ];
+        then
             break;
         fi
 
-        FILE_EXT=$(check_ext $file | cat)
+        FILE_EXT=$(check_ext $file);
 
-        if [ $FILE_EXT = $unsupported_file_extension ]; then
+        if [ "$FILE_EXT" = "$unsupported_file_extension" ];
+        then
             IS_WRONG=1;
             continue;
         fi
 
-        filename=$(basename $file)
-        objname="${filename%$FILE_EXT}.o"
-        OBJS="$objname $OBJS"
+        filename=$(basename $file);
+        objname="${filename%$FILE_EXT}.o";
+        OBJS="$objname $OBJS";
 
-        FILE_TYPE=$(check_file_type $FILE_EXT | cat)
+        FILE_TYPE=$(check_file_type $FILE_EXT);
 
-        if [ "$FILE_TYPE" = "c" ]; then
-            $GCC -c -o $objname $file -Wall -Wextra -std=$CSTD $CFLAGS
-        elif [ "$FILE_TYPE" = "c++" ]; then
+        if [ "$FILE_TYPE" = "c" ];
+        then
+            $GCC -c -o $objname $file -Wall -Wextra -std=$CSTD $CFLAGS;
+        elif [ "$FILE_TYPE" = "c++" ];
+        then
             IS_CPP=1
-            $GPP -c -o $objname $file -Wall -Wextra -std=$CXXSTD $CXXFLAGS
+            $GXX -c -o $objname $file -Wall -Wextra -std=$CXXSTD $CXXFLAGS;
         fi
     done
 
-    if [ $IS_WRONG -ne 0 ]; then
+    if [ $IS_WRONG -ne 0 ];
+    then
         exit 1;
     fi
 
-    ar rcs "lib${dest}.a" $OBJS
+    ar rcs "lib${dest}.a" $OBJS;
 fi
 
-if [ "$?" -ne 0 ]; then
+if [ "$?" -ne 0 ];
+then
     echo "Wrong program compiled by GCC";
     clean;
     exit 1;
@@ -500,100 +508,121 @@ fi
 clean;
 
 # Test the program with Clang.
+echo "Test target source against Clang";
 if [ "$cmd" = "application" ]; then
-    IS_CPP=0
-    OBJS=
-    for file in "$@"; do
-        if [ "$file" = "--" ]; then
+    IS_CPP=0;
+    OBJS="";
+    for file in $@;
+    do
+        if [ "$file" = "--" ];
+        then
             break;
         fi
 
-        FILE_EXT=$(check_ext $file | cat)
-        filename=$(basename $file)
-        objname="${filename%$FILE_EXT}.o"
-        OBJS="$objname $OBJS"
+        FILE_EXT=$(check_ext $file);
+        filename=$(basename $file);
+        objname="${filename%$FILE_EXT}.o";
+        OBJS="$objname $OBJS";
 
-        FILE_TYPE=$(check_file_type $FILE_EXT | cat)
+        FILE_TYPE=$(check_file_type $FILE_EXT);
 
-        if [ "$FILE_TYPE" = "c" ]; then
-            $CLANG -c -o $objname $file -Wall -Wextra -std=$CSTD $CFLAGS
-        elif [ "$FILE_TYPE" = "c++" ]; then
-            IS_CPP=1
-            $CLANGPP -c -o $objname $file -Wall -Wextra -std=$CXXSTD $CXXFLAGS
+        if [ "$FILE_TYPE" = "c" ];
+        then
+            $CLANG -c -o $objname $file -Wall -Wextra -std=$CSTD $CFLAGS;
+        elif [ "$FILE_TYPE" = "c++" ];
+        then
+            IS_CPP=1;
+            $CLANGXX -c -o $objname $file -Wall -Wextra -std=$CXXSTD $CXXFLAGS;
         fi
     done
-    if [ $IS_CPP -eq 1 ]; then
-        LIBS_INTERNAL="-lstdc++"
+    if [ $IS_CPP -eq 1 ];
+    then
+        LIBS_INTERNAL="-lstdc++";
     fi
     $CLANG -o $dest $OBJS $LIBS_INTERNAL $LIBS -Wall -Wextra -std=$CXSD \
-        $CFLAGS $LDFLAGS
+        $CFLAGS $LDFLAGS;
 
-    args=
-    is_arg=0
-    for arg in "$@"; do
-        if [ "$arg" = "--" ]; then
+    args="";
+    is_arg=0;
+    for arg in $@;
+    do
+        if [ "$arg" = "--" ];
+        then
             is_arg=1;
             continue;
         fi
 
-        if [ $is_arg -eq 1 ]; then
-            args="$args $arg"
+        if [ $is_arg -eq 1 ];
+        then
+            args="$args $arg";
         fi
     done
-    LD_LIBRARY_PATH=$LD_LIBRARY_PATH ./$dest $args
-elif [ "$cmd" = "dynamic" ]; then
-    IS_CPP=0
-    OBJS=
-    for file in "$@"; do
-        if [ "$file" = "--" ]; then
+    LD_LIBRARY_PATH=$LD_LIBRARY_PATH ./$dest $args;
+elif [ "$cmd" = "dynamic" ];
+then
+    IS_CPP=0;
+    OBJS="";
+    for file in $@;
+    do
+        if [ "$file" = "--" ];
+        then
             break;
         fi
 
-        FILE_EXT=$(check_ext $file | cat)
-        filename=$(basename $file)
-        objname="${filename%$FILE_EXT}.o"
-        OBJS="$objname $OBJS"
+        FILE_EXT=$(check_ext $file);
+        filename=$(basename $file);
+        objname="${filename%$FILE_EXT}.o";
+        OBJS="$objname $OBJS";
 
-        FILE_TYPE=$(check_file_type $FILE_EXT | cat)
+        FILE_TYPE=$(check_file_type $FILE_EXT);
 
-        if [ "$FILE_TYPE" = "c" ]; then
-            $CLANG -fPIC -c -o $objname $file -Wall -Wextra -std=$CSTD $CFLAGS
-        elif [ "$FILE_TYPE" = "c++" ]; then
-            IS_CPP=1
-            $CLANGPP -fPIC -c -o $objname $file -Wall -Wextra -std=$CXXSTD $CXXFLAGS
+        if [ "$FILE_TYPE" = "c" ];
+        then
+            $CLANG -fPIC -c -o $objname $file -Wall -Wextra -std=$CSTD $CFLAGS;
+        elif [ "$FILE_TYPE" = "c++" ];
+        then
+            IS_CPP=1;
+            $CLANGXX -fPIC -c -o $objname $file -Wall -Wextra -std=$CXXSTD $CXXFLAGS;
         fi
     done
-    if [ $IS_CPP -eq 1 ]; then
-        LIBS_INTERNAL="-lstdc++"
+    if [ $IS_CPP -eq 1 ];
+    then
+        LIBS_INTERNAL="-lstdc++";
     fi
     $CLANG -shared -o "lib${dest}.so" $OBJS $LIBS_INTERNAL $LIBS \
-        -Wall -Wextra -std=$CSTD $CFLAGS $LDFLAGS
-elif [ "$cmd" = "static" ]; then
-    IS_CPP=0
-    OBJS=
-    for file in "$@"; do
-        if [ "$file" = "--" ]; then
+        -Wall -Wextra -std=$CSTD $CFLAGS $LDFLAGS;
+elif [ "$cmd" = "static" ];
+then
+    IS_CPP=0;
+    OBJS="";
+    for file in $@;
+    do
+        if [ "$file" = "--" ];
+        then
             break;
         fi
 
-        FILE_EXT=$(check_ext $file | cat)
-        filename=$(basename $file)
-        objname="${filename%$FILE_EXT}.o"
-        OBJS="$objname $OBJS"
+        FILE_EXT=$(check_ext $file);
+        filename=$(basename $file);
+        objname="${filename%$FILE_EXT}.o";
+        OBJS="$objname $OBJS";
 
-        FILE_TYPE=$(check_file_type $FILE_EXT | cat)
+        FILE_TYPE=$(check_file_type $FILE_EXT);
 
-        if [ "$FILE_TYPE" = "c" ]; then
-            $CLANG -c -o $objname $file -Wall -Wextra -std=$CSTD $CFLAGS
-        elif [ "$FILE_TYPE" = "c++" ]; then
-            IS_CPP=1
-            $CLANGPP -c -o $objname $file -Wall -Wextra -std=$CXXSTD $CXXFLAGS
+        if [ "$FILE_TYPE" = "c" ];
+        then
+            $CLANG -c -o $objname $file -Wall -Wextra -std=$CSTD $CFLAGS;
+        elif [ "$FILE_TYPE" = "c++" ];
+        then
+            IS_CPP=1;
+            $CLANGXX -c -o $objname $file -Wall -Wextra -std=$CXXSTD $CXXFLAGS;
         fi
     done
     ar rcs "lib${dest}.a" $OBJS
 fi
 
-if [ "$?" -ne 0 ]; then
+if [ "$?" -ne 0 ];
+then
     echo "Wrong program compiled by Clang";
     clean;
     exit 1;
