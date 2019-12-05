@@ -25,7 +25,14 @@ In addition to code warnings, `ccwarn` can be used to test language standard con
 
 `ccwarn` will check these dependencies, emitting an error message if neither is installed on your system.
 
-We tested `ccwarn` on Ubuntu 18.04 LTS and Amazon Linux. The latter is largely RHEL and CentOS compatible. It should work on other Unix-like OSes as well.
+We tested `ccwarn` on several Unix or Unix-like systems:
+
+* Ubuntu 18.04 LTS
+* Amazon Linux, largely RHEL and CentOS compatible
+* TrueOS, FreeBSD derived
+* Solaris
+
+It should work on other Unix-like systems as well.
 
 ## Supported File Formats
 
