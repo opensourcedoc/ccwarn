@@ -4,11 +4,11 @@
 
 ## Warning
 
-`ccwarn` checks target source by compiling and executing it. Hence, DON'T use `ccwarn` to test untrusted source.
+`ccwarn` checks target source by compiling and executing it. Hence, DON'T USE `ccwarn` to test UNTRUSTED source.
 
 ## Why `ccwarn`?
 
-Both GCC and Clang are popular C and C++ compilers among Unix-like OSes. They can optionally emit non-erroneous warning messages during compilations. Programmers should try their best to reduce those warnings for better code quality.
+Both GCC and Clang are popular C and C++ compilers among Unix or Unix-like systems. They can optionally emit non-erroneous warning messages during compilations. Programmers should try their best to reduce those warnings for better code quality.
 
 Nevertheless, it is tedious to write Makefile or another project configuration file for each code base. To address this issue, `ccwarn` automatically tests your code base against both Clang and GCC without any project configuration file.
 
