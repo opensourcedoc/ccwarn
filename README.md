@@ -28,9 +28,9 @@ In addition to code warnings, `ccwarn` can be used to test language standard con
 We tested `ccwarn` against several Unix or Unix-like systems:
 
 * Ubuntu 18.04 LTS
-* Amazon Linux, largely RHEL and CentOS compatible
+* CentOS 8
 * TrueOS, FreeBSD compatible
-* Solaris
+* Solaris 11
 
 It should work on other Unix or Unix-like systems as well.
 
