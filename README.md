@@ -27,11 +27,10 @@ In addition to code warnings, `ccwarn` can be used to test language standard con
 
 We tested `ccwarn` against several Unix or Unix-like systems:
 
-* Ubuntu 18.04 LTS
-* CentOS 8
-* openSUSE Leap 15.1
-* TrueOS, FreeBSD compatible
-* Solaris 11
+* Ubuntu 20.04 LTS
+* Rocky Linux 8.5
+* openSUSE Leap 15.3
+* FreeBSD 13.0
 
 It should work on other Unix or Unix-like systems as well.
 
@@ -139,4 +138,4 @@ If you just want to run some C or C++ source, see [ccrun](https://github.com/cwc
 
 ## License
 
-Copyright 2019, Michael Chen; licensed under [MIT](https://opensource.org/licenses/MIT).
+Copyright 2019, Michelle Chen; licensed under [MIT](https://opensource.org/licenses/MIT).
