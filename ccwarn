@@ -1,6 +1,7 @@
 #!/bin/sh
 # Check C or C++ code base against both GCC and Clang.
-# Author: Michael Chen  License: MIT
+# Author: Michelle Chen  License: MIT
+
 
 program="$0";
 version="0.3.0";
