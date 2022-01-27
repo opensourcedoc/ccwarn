@@ -2,10 +2,6 @@
 
 `ccwarn`, aka *C* and *C*++ *Warn*ings, tests C or C++ source against both GCC and Clang automatically.
 
-## Warning
-
-`ccwarn` checks target source by compiling and executing it. Hence, DON'T USE `ccwarn` to test UNTRUSTED source.
-
 ## Why `ccwarn`?
 
 Both GCC and Clang are popular C and C++ compilers among Unix or Unix-like systems. They can optionally emit non-erroneous warning messages during compilations. Programmers should try their best to reduce those warnings for better code quality.
@@ -18,21 +14,19 @@ In addition to code warnings, `ccwarn` can be used to test language standard con
 
 ## System Requirements
 
-`ccwarn` itself is written in POSIX shell. Besides a shell, `ccwarn` depends on
-
-* GCC
-* Clang
+`ccwarn` itself is written in POSIX shell. Besides a shell, `ccwarn` depends on both GCC and Clang.
 
 `ccwarn` will check these dependencies, emitting an error message if neither is installed on your system.
 
-We tested `ccwarn` against several Unix or Unix-like systems:
+We tested `ccwarn` against several Unix variants:
 
+* macOS Big Sur
 * Ubuntu 20.04 LTS
 * Rocky Linux 8.5
 * openSUSE Leap 15.3
 * FreeBSD 13.0
 
-It should work on other Unix or Unix-like systems as well.
+It should work on other Unix systems as well.
 
 ## Supported File Formats
 
@@ -83,28 +77,10 @@ Test multiple files in a project:
 $ ccwarn path/to/*.c
 ```
 
-Test for a static library:
-
-```
-$ ccwarn static path/to/*.c
-```
-
-Test for a dynamic library:
-
-```
-$ ccwarn dynamic path/to/*.c
-```
-
 Test for C and C++ mixed code base:
 
 ```
 $ ccwarn path/to/*.c path/to/*.cpp
-```
-
-Test some executable with arguments:
-
-```
-$ ccwarn path/to/*.c -- --opt param_a param_b param_c
 ```
 
 Show help info:
@@ -123,14 +99,14 @@ You can adjust the behavior of `ccwarn` with the following environment variables
 * **CLANGXX** to set Clang++ compiler
 * **CSTD** to set C standard, default to C11
 * **CXXSTD** to set C++ standard, default to C++17
-* **OUT_FILE** to set the name of a temporary output file
 * **CFLAGS** to set custom include paths and compiler flags for C
 * **CXXFLAGS** to set custom include paths and compiler flags for C++
-* **LDFLAGS** to set custom lib paths
-* **LIBS** to set custom library linkages
-* **LD_LIBRARY_PATH** to set custom binary file paths
 
 All environment variables are optional, set with sensible default values.
+
+## Breaking Changes
+
+<del>`ccwarn` checks target source by compiling and executing it. Hence, DON'T USE `ccwarn` to test UNTRUSTED source.</del> Instead of running input source, `ccwarn` only compiles source into objects with warnings enabled now. Therefore, `main` function is not required to run `ccwarn`.
 
 ## Note
 
@@ -138,4 +114,4 @@ If you just want to run some C or C++ source, see [ccrun](https://github.com/cwc
 
 ## License
 
-Copyright 2019, Michelle Chen; licensed under [MIT](https://opensource.org/licenses/MIT).
+Copyright (c) 2019-2022 Michelle Chen; licensed under [MIT](https://opensource.org/licenses/MIT).

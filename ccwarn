@@ -1,10 +1,12 @@
 #!/bin/sh
-# Check C or C++ code base against both GCC and Clang.
-# Author: Michelle Chen  License: MIT
+
+# ccwarn - Check C or C++ code base against both GCC and Clang.
+#
+# Copyright (c) 2019-2022 Michelle Chen.  Licensed under MIT
 
 
 program="$0";
-version="0.3.0";
+version="0.4.0";
 license="MIT";
 
 unsupported_file_extension="unknown";
@@ -24,30 +26,24 @@ license ()
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 help_info ()
 {
-    printf "Usage: %s [command] ...\n" "$program";
+    printf "Usage: %s path/to/*c path/to/*.cpp\n" "$program";
+    printf "       %s [command] ...\n" "$program";
     printf "       %s help [command]\n" "$program";
     printf "\n";
     printf "Commands:\n";
     printf "\tversion\t\tShow version info and exit\n";
     printf "\tlicense\t\tShow license info and exit\n";
     printf "\thelp\t\tShow help info and exit\n";
-    printf "\tapplication\tCompile an application (default)\n";
-    printf "\tstatic\t\tCompile a static library\n";
-    printf "\tdynamic\t\tCompile a dynamic library\n";
     printf "\n";
     printf "Environment variables:\n";
-    printf "\tGCC\t\t\tSet GCC compiler\n";
-    printf "\tGXX\t\t\tSet G++ compiler\n";
-    printf "\tCLANG\t\t\tSet Clang compiler\n";
-    printf "\tCLANGXX\t\t\tSet Clang++ compiler\n";
-    printf "\tOUT_FILE\t\tThe name of output file\n";
-    printf "\tCSTD\t\t\tSet C standard, default to C11\n";
-    printf "\tCXXSTD\t\t\tSet C++ standard, default to C++17\n";
-    printf "\tCFLAGS\t\t\tCustom include paths and compiler flags for C\n";
-    printf "\tCXXFLAGS\t\tCusteom include paths and compiler flags for C++\n";
-    printf "\tLDFLAGS\t\t\tCustom library paths\n";
-    printf "\tLIBS\t\t\tCustom library linkage\n";
-    printf "\tLD_LIBRARY_PATH\t\tCustom binary file paths\n";
+    printf "\tGCC\t\tSet GCC compiler\n";
+    printf "\tGXX\t\tSet G++ compiler\n";
+    printf "\tCLANG\t\tSet Clang compiler\n";
+    printf "\tCLANGXX\t\tSet Clang++ compiler\n";
+    printf "\tCSTD\t\tSet C standard, default to C11\n";
+    printf "\tCXXSTD\t\tSet C++ standard, default to C++17\n";
+    printf "\tCFLAGS\t\tCustom include paths and compiler flags for C\n";
+    printf "\tCXXFLAGS\tCusteom include paths and compiler flags for C++\n";
 }
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 #--------1---------2---------3---------4---------5---------6---------7---------8
@@ -71,27 +67,6 @@ help_help ()
     echo "Usage: $program help [command]";
     echo "";
     echo "Show help info for [command] and exit";
-}
-
-help_application ()
-{
-    echo "Usage: $program [application] main.m ...";
-    echo "";
-    echo "Test an application against both GCC and Clang";
-}
-
-help_static ()
-{
-    echo "Usage: $program static lib.m ...";
-    echo "";
-    echo "Test a static library against both GCC and Clang";
-}
-
-help_dynamic ()
-{
-    echo "Usage: $program dynamic lib.m ...";
-    echo "";
-    echo "Test a dynamic library against both GCC and Clang";
 }
 
 # check_ext extension
@@ -219,6 +194,12 @@ then
     exit 0;
 fi
 
+if [ -z "$cmd" ];
+then
+    help_info;
+    exit 0;
+fi
+
 if [ "$cmd" = "help" ];
 then
     subcmd=$2
@@ -232,34 +213,16 @@ then
     elif [ "$subcmd" = "help" ];
     then
         help_help;
-    elif [ "$subcmd" = "application" ];
-    then
-        help_application;
-    elif [ "$subcmd" = "static" ];
-    then
-        help_static;
-    elif [ "$subcmd" = "dynamic" ];
-    then
-        help_dynamic;
     elif [ "$subcmd" = "" ];
     then
         help_info;
+        exit 0;
     else
         echo "Unknown subcommand: $2" >&2;
         exit 1;
     fi
 
     exit 0;
-fi
-
-if [ "$cmd" = "application" ] || [ "$cmd" = "static" ] || [ "$cmd" = "dynamic" ];
-then
-    shift;
-fi
-
-if [ "$cmd" != "application" ] && [ "$cmd" != "static" ] && [ "$cmd" != "dynamic" ];
-then
-    cmd="application";
 fi
 
 GCC=$GCC;
@@ -307,24 +270,6 @@ fi
 
 check_cpp_standard $CXXSTD;
 
-# Set dist file
-dest=$OUT_FILE;
-if [ -z "$dest" ];
-then
-    dest="out";
-fi
-
-if [ -f "$dest" ] || [ -d "$dest" ];
-then
-    echo "File or directory ${dest} exists in directory" >&2;
-    exit 1;
-fi
-
-clean ()
-{
-    rm -f $dest "lib${dest}.a" "lib${dest}.so" -- *.o;
-}
-
 # Check whether GCC exists on the host.
 if ! command -v $GCC 2>/dev/null 1>&2;
 then
@@ -348,287 +293,73 @@ fi
 
 # Test the program with GCC.
 echo "Test target source against GCC";
-if [ "$cmd" = "application" ];
-then
-    IS_CPP=0;
-    OBJS="";
-    IS_WRONG=0;
-    for file in $@;
-    do
-        if [ "$file" = "--" ]; then
-            break;
-        fi
+IS_WRONG=0;
+for file in "$@";
+do
+    FILE_EXT=$(check_ext "$file");
 
-        FILE_EXT=$(check_ext "$file");
-
-        if [ "$FILE_EXT" = "$unsupported_file_extension" ];
-        then
-            IS_WRONG=1;
-            continue;
-        fi
-
-        filename=$(basename "$file");
-        objname="${filename%$FILE_EXT}.o";
-        OBJS="$objname $OBJS";
-
-        FILE_TYPE=$(check_file_type "$FILE_EXT");
-
-        if [ "$FILE_TYPE" = "c" ];
-        then
-            $GCC -c -o $objname $file -Wall -Wextra -std=$CSTD $CFLAGS;
-        elif [ "$FILE_TYPE" = "c++" ];
-        then
-            IS_CPP=1;
-            $GXX -c -o $objname $file -Wall -Wextra -std=$CXXSTD $CXXFLAGS;
-        fi
-    done
-
-    if [ $IS_WRONG -ne 0 ];
+    if [ "$FILE_EXT" = "$unsupported_file_extension" ];
     then
-        exit 1;
+        echo "Unsupported file: ${file}" >&2;
+        continue;
     fi
 
-    if [ $IS_CPP -eq 1 ];
+    filename=$(basename "$file");
+    objname=$(mktemp -t ${filename%$FILE_EXT}).o;
+
+    FILE_TYPE=$(check_file_type "$FILE_EXT");
+
+    if [ "$FILE_TYPE" = "c" ];
     then
-        LIBS_INTERNAL="-lstdc++";
-    fi
-    $GCC -o $dest $OBJS $LIBS_INTERNAL $LIBS -Wall -Wextra -std=$CSTD $CFLAGS $LDFLAGS;
-
-    args="";
-    is_arg=0;
-    for arg in $@; do
-        if [ "$arg" = "--" ];
-        then
-            is_arg=1;
-            continue;
-        fi
-
-        if [ $is_arg -eq 1 ];
-        then
-            args="$args $arg";
-        fi
-    done
-    LD_LIBRARY_PATH=$LD_LIBRARY_PATH ./$dest $args;
-elif [ "$cmd" = "dynamic" ];
-then
-    IS_CPP=0;
-    OBJS="";
-    IS_WRONG=0;
-    for file in $@;
-    do
-        if [ "$file" = "--" ];
-        then
-            break;
-        fi
-
-        FILE_EXT=$(check_ext "$file");
-
-        if [ "$FILE_EXT" = "$unsupported_file_extension" ];
-        then
-            IS_WRONG=1;
-            continue;
-        fi
-
-        filename=$(basename "$file");
-        objname="${filename%$FILE_EXT}.o";
-        OBJS="$objname $OBJS";
-
-        FILE_TYPE=$(check_file_type "$FILE_EXT");
-
-        if [ "$FILE_TYPE" = "c" ];
-        then
-            $GCC -fPIC -c -o "$objname" "$file" -Wall -Wextra -std=$CSTD $CFLAGS;
-        elif [ "$FILE_TYPE" = "c++" ];
-        then
-            IS_CPP=1;
-            $GXX -fPIC -c -o "$objname" "$file" -Wall -Wextra -std=$CXXSTD $CXXFLAGS;
-        fi
-    done
-
-    if [ $IS_WRONG -ne 0 ];
+        $GCC -c -o $objname $file -Wall -Wextra -std=$CSTD $CFLAGS;
+        if [ "$?" -ne 0 ]; then IS_WRONG=1; fi
+    elif [ "$FILE_TYPE" = "c++" ];
     then
-        exit 1;
+        $GXX -c -o $objname $file -Wall -Wextra -std=$CXXSTD $CXXFLAGS;
+        if [ "$?" -ne 0 ]; then IS_WRONG=1; fi
     fi
+done
 
-    if [ $IS_CPP -eq 1 ];
-    then
-        LIBS_INTERNAL="-lstdc++";
-    fi
-    $GCC -shared -o "lib${dest}.so" $OBJS $LIBS_INTERNAL $LIBS \
-        -Wall -Wextra -std=$CSTD $CFLAGS $LDFLAGS;
-elif [ "$cmd" = "static" ];
-then
-    OBJS="";
-    IS_WRONG=0;
-    for file in $@;
-    do
-        if [ "$file" = "--" ];
-        then
-            break;
-        fi
-
-        FILE_EXT=$(check_ext $file);
-
-        if [ "$FILE_EXT" = "$unsupported_file_extension" ];
-        then
-            IS_WRONG=1;
-            continue;
-        fi
-
-        filename=$(basename $file);
-        objname="${filename%$FILE_EXT}.o";
-        OBJS="$objname $OBJS";
-
-        FILE_TYPE=$(check_file_type $FILE_EXT);
-
-        if [ "$FILE_TYPE" = "c" ];
-        then
-            $GCC -c -o $objname $file -Wall -Wextra -std=$CSTD $CFLAGS;
-        elif [ "$FILE_TYPE" = "c++" ];
-        then
-            IS_CPP=1
-            $GXX -c -o $objname $file -Wall -Wextra -std=$CXXSTD $CXXFLAGS;
-        fi
-    done
-
-    if [ $IS_WRONG -ne 0 ];
-    then
-        exit 1;
-    fi
-
-    ar rcs "lib${dest}.a" $OBJS;
-fi
-
-if [ "$?" -ne 0 ];
+if [ "$IS_WRONG" -ne 0 ];
 then
     echo "Wrong program compiled by GCC";
-    clean;
     exit 1;
 fi
-
-clean;
 
 # Test the program with Clang.
 echo "Test target source against Clang";
-if [ "$cmd" = "application" ]; then
-    IS_CPP=0;
-    OBJS="";
-    for file in $@;
-    do
-        if [ "$file" = "--" ];
-        then
-            break;
-        fi
+for file in "$@";
+do
+    FILE_EXT=$(check_ext $file);
 
-        FILE_EXT=$(check_ext $file);
-        filename=$(basename $file);
-        objname="${filename%$FILE_EXT}.o";
-        OBJS="$objname $OBJS";
+    FILE_EXT=$(check_ext "$file");
 
-        FILE_TYPE=$(check_file_type $FILE_EXT);
-
-        if [ "$FILE_TYPE" = "c" ];
-        then
-            $CLANG -c -o $objname $file -Wall -Wextra -std=$CSTD $CFLAGS;
-        elif [ "$FILE_TYPE" = "c++" ];
-        then
-            IS_CPP=1;
-            $CLANGXX -c -o $objname $file -Wall -Wextra -std=$CXXSTD $CXXFLAGS;
-        fi
-    done
-    if [ $IS_CPP -eq 1 ];
+    if [ "$FILE_EXT" = "$unsupported_file_extension" ];
     then
-        LIBS_INTERNAL="-lstdc++";
+        echo "Unsupported file: ${file}" >&2;
+        continue;
     fi
-    $CLANG -o $dest $OBJS $LIBS_INTERNAL $LIBS -Wall -Wextra -std=$CXSD \
-        $CFLAGS $LDFLAGS;
 
-    args="";
-    is_arg=0;
-    for arg in $@;
-    do
-        if [ "$arg" = "--" ];
-        then
-            is_arg=1;
-            continue;
-        fi
+    filename=$(basename "$file");
+    objname=$(mktemp -t ${filename%$FILE_EXT}).o;
 
-        if [ $is_arg -eq 1 ];
-        then
-            args="$args $arg";
-        fi
-    done
-    LD_LIBRARY_PATH=$LD_LIBRARY_PATH ./$dest $args;
-elif [ "$cmd" = "dynamic" ];
-then
-    IS_CPP=0;
-    OBJS="";
-    for file in $@;
-    do
-        if [ "$file" = "--" ];
-        then
-            break;
-        fi
+    FILE_TYPE=$(check_file_type $FILE_EXT);
 
-        FILE_EXT=$(check_ext $file);
-        filename=$(basename $file);
-        objname="${filename%$FILE_EXT}.o";
-        OBJS="$objname $OBJS";
-
-        FILE_TYPE=$(check_file_type $FILE_EXT);
-
-        if [ "$FILE_TYPE" = "c" ];
-        then
-            $CLANG -fPIC -c -o $objname $file -Wall -Wextra -std=$CSTD $CFLAGS;
-        elif [ "$FILE_TYPE" = "c++" ];
-        then
-            IS_CPP=1;
-            $CLANGXX -fPIC -c -o $objname $file -Wall -Wextra -std=$CXXSTD $CXXFLAGS;
-        fi
-    done
-    if [ $IS_CPP -eq 1 ];
+    if [ "$FILE_TYPE" = "c" ];
     then
-        LIBS_INTERNAL="-lstdc++";
+        $CLANG -c -o $objname $file -Wall -Wextra -std=$CSTD $CFLAGS;
+        if [ "$?" -ne 0 ]; then IS_WRONG=1; fi
+    elif [ "$FILE_TYPE" = "c++" ];
+    then
+        $CLANGXX -c -o $objname $file -Wall -Wextra -std=$CXXSTD $CXXFLAGS;
+        if [ "$?" -ne 0 ]; then IS_WRONG=1; fi
     fi
-    $CLANG -shared -o "lib${dest}.so" $OBJS $LIBS_INTERNAL $LIBS \
-        -Wall -Wextra -std=$CSTD $CFLAGS $LDFLAGS;
-elif [ "$cmd" = "static" ];
-then
-    IS_CPP=0;
-    OBJS="";
-    for file in $@;
-    do
-        if [ "$file" = "--" ];
-        then
-            break;
-        fi
+done
 
-        FILE_EXT=$(check_ext $file);
-        filename=$(basename $file);
-        objname="${filename%$FILE_EXT}.o";
-        OBJS="$objname $OBJS";
-
-        FILE_TYPE=$(check_file_type $FILE_EXT);
-
-        if [ "$FILE_TYPE" = "c" ];
-        then
-            $CLANG -c -o $objname $file -Wall -Wextra -std=$CSTD $CFLAGS;
-        elif [ "$FILE_TYPE" = "c++" ];
-        then
-            IS_CPP=1;
-            $CLANGXX -c -o $objname $file -Wall -Wextra -std=$CXXSTD $CXXFLAGS;
-        fi
-    done
-    ar rcs "lib${dest}.a" $OBJS
-fi
-
-if [ "$?" -ne 0 ];
+if [ "$IS_WRONG" -ne 0 ];
 then
     echo "Wrong program compiled by Clang";
-    clean;
     exit 1;
 fi
-
-clean;
 
 exit 0;
