@@ -4,362 +4,310 @@
 #
 # Copyright (c) 2019-2022 Michelle Chen.  Licensed under MIT
 
+program=$0
+VERSION=0.4.0
+LICENSE_NAME=MIT
 
-program="$0";
-version="0.4.0";
-license="MIT";
+unsupported_file_extension=unknown
+unsupported_file_type=empty
 
-unsupported_file_extension="unknown";
-unsupported_file_type="empty";
-
-version ()
-{
-    echo $version;
+show_version() {
+    printf '%s\n' "$VERSION"
 }
 
-license ()
-{
-    echo $license;
+show_license() {
+    printf '%s\n' "$LICENSE_NAME"
 }
 
-#--------1---------2---------3---------4---------5---------6---------7---------8
-#2345678901234567890123456789012345678901234567890123456789012345678901234567890
-help_info ()
-{
-    printf "Usage: %s path/to/*c path/to/*.cpp\n" "$program";
-    printf "       %s [command] ...\n" "$program";
-    printf "       %s help [command]\n" "$program";
-    printf "\n";
-    printf "Commands:\n";
-    printf "\tversion\t\tShow version info and exit\n";
-    printf "\tlicense\t\tShow license info and exit\n";
-    printf "\thelp\t\tShow help info and exit\n";
-    printf "\n";
-    printf "Environment variables:\n";
-    printf "\tGCC\t\tSet GCC compiler\n";
-    printf "\tGXX\t\tSet G++ compiler\n";
-    printf "\tCLANG\t\tSet Clang compiler\n";
-    printf "\tCLANGXX\t\tSet Clang++ compiler\n";
-    printf "\tCSTD\t\tSet C standard, default to C11\n";
-    printf "\tCXXSTD\t\tSet C++ standard, default to C++17\n";
-    printf "\tCFLAGS\t\tCustom include paths and compiler flags for C\n";
-    printf "\tCXXFLAGS\tCusteom include paths and compiler flags for C++\n";
-}
-#2345678901234567890123456789012345678901234567890123456789012345678901234567890
-#--------1---------2---------3---------4---------5---------6---------7---------8
-
-help_version ()
-{
-    echo "Usage: $program version";
-    echo "";
-    echo "Show version info and exit";
+help_info() {
+    printf 'Usage: %s path/to/*c path/to/*.cpp\n' "$program"
+    printf '       %s [command] ...\n' "$program"
+    printf '       %s help [command]\n' "$program"
+    printf '\n'
+    printf 'Commands:\n'
+    printf '\tversion\t\tShow version info and exit\n'
+    printf '\tlicense\t\tShow license info and exit\n'
+    printf '\thelp\t\tShow help info and exit\n'
+    printf '\n'
+    printf 'Environment variables:\n'
+    printf '\tGCC\t\tSet GCC compiler\n'
+    printf '\tGXX\t\tSet G++ compiler\n'
+    printf '\tCLANG\t\tSet Clang compiler\n'
+    printf '\tCLANGXX\t\tSet Clang++ compiler\n'
+    printf '\tCSTD\t\tSet C standard, default to C11\n'
+    printf '\tCXXSTD\t\tSet C++ standard, default to C++17\n'
+    printf '\tCFLAGS\t\tCustom include paths and compiler flags for C\n'
+    printf '\tCXXFLAGS\tCustom include paths and compiler flags for C++\n'
 }
 
-help_license ()
-{
-    echo "Usage: $program license";
-    echo "";
-    echo "Show license info and exit";
+help_version() {
+    printf 'Usage: %s version\n' "$program"
+    printf '\n'
+    printf 'Show version info and exit\n'
 }
 
-help_help ()
-{
-    echo "Usage: $program help [command]";
-    echo "";
-    echo "Show help info for [command] and exit";
+help_license() {
+    printf 'Usage: %s license\n' "$program"
+    printf '\n'
+    printf 'Show license info and exit\n'
 }
 
-# check_ext extension
-check_ext ()
-{
-    local ext=$1;
+help_help() {
+    printf 'Usage: %s help [command]\n' "$program"
+    printf '\n'
+    printf 'Show help info for [command] and exit\n'
+}
 
-    if [ -z "$ext" ];
-    then
-        echo "No valid file extension" >&2;
-        exit 1;
+# check_ext path
+check_ext() {
+    ext=$1
+
+    if [ -z "$ext" ]; then
+        printf 'No valid file extension\n' >&2
+        exit 1
     fi
 
     case "$ext" in
-    *.cpp)
-        echo ".cpp"
-        ;;
-    *.cxx)
-        echo ".cxx"
-        ;;
-    *.cc)
-        echo ".cc"
-        ;;
-    *.c)
-        echo ".c"
-        ;;
-    *)
-        echo "Unsupported file: $1" >&2;
-        echo "$unsupported_file_extension";
+        *.cpp) printf '.cpp\n' ;;
+        *.cxx) printf '.cxx\n' ;;
+        *.cc)  printf '.cc\n' ;;
+        *.c)   printf '.c\n' ;;
+        *)
+            printf 'Unsupported file: %s\n' "$1" >&2
+            printf '%s\n' "$unsupported_file_extension"
+            ;;
     esac
 }
 
 # check_file_type extension
-check_file_type ()
-{
-    local ext=$1;
+check_file_type() {
+    ext=$1
 
-    if [ -z "$ext" ];
-    then
-        echo "No valid file extension" >&2;
-        exit 1;
+    if [ -z "$ext" ]; then
+        printf 'No valid file extension\n' >&2
+        exit 1
     fi
 
     case "$ext" in
         .c)
-            echo "c"
+            printf 'c\n'
             ;;
         .cpp|.cxx|.cc)
-            echo "c++"
+            printf 'c++\n'
             ;;
         *)
-            echo "Unknown file extension: $FILE_EXT" >&2;
-            echo $unsupported_file_type;
+            printf 'Unknown file extension: %s\n' "$ext" >&2
+            printf '%s\n' "$unsupported_file_type"
             ;;
     esac
 }
 
 # check_c_standard standard
-check_c_standard ()
-{
-    local std=$1;
+check_c_standard() {
+    std=$1
 
-    if [ -z "$std" ];
-    then
-        echo "No valid C standard" >&2;
-        exit 1;
+    if [ -z "$std" ]; then
+        printf 'No valid C standard\n' >&2
+        exit 1
     fi
 
     case "$std" in
-        c89|c90)
-            ;;
-        c99|c9x)
-            ;;
-        c11|c1x)
-            ;;
-        c17|c18)
-            ;;
-        c2x)
+        c89|c90|c99|c9x|c11|c1x|c17|c18|c2x)
             ;;
         *)
-            echo "Unsupported C standard: $1" >&2;
-            exit 1;
+            printf 'Unsupported C standard: %s\n' "$1" >&2
+            exit 1
             ;;
     esac
 }
 
 # check_cpp_standard standard
-check_cpp_standard ()
-{
-    local std=$1;
+check_cpp_standard() {
+    std=$1
 
-    if [ -z "$std" ];
-    then
-        echo "No valid C++ standard" >&2;
-        exit 1;
+    if [ -z "$std" ]; then
+        printf 'No valid C++ standard\n' >&2
+        exit 1
     fi
 
     case "$std" in
-        c++98|c++03)
-            ;;
-        c++11|c++0x)
-            ;;
-        c++14|c++1y)
-            ;;
-        c++17|c++1z)
-            ;;
-        c++2a)
+        c++98|c++03|c++11|c++0x|c++14|c++1y|c++17|c++1z|c++2a)
             ;;
         *)
-            echo "Unsupported C++ standard: $1" >&2;
-            exit 1;
+            printf 'Unsupported C++ standard: %s\n' "$1" >&2
+            exit 1
+            ;;
     esac
 }
 
+cleanup_tmp_files() {
+    for f in ${TMP_FILES-}; do
+        [ -n "$f" ] && rm -f -- "$f"
+    done
+}
+
+make_obj_temp() {
+    base=$1
+    if command -v mktemp >/dev/null 2>&1; then
+        mktemp "${TMPDIR:-/tmp}/ccwarn.${base}.XXXXXX.o"
+    else
+        printf '%s/ccwarn.%s.%d.o\n' "${TMPDIR:-/tmp}" "$base" "$$"
+    fi
+}
+
+compile_with() {
+    compiler=$1
+    stdflag=$2
+    flags=$3
+    file=$4
+    objname=$5
+
+    # shellcheck disable=SC2086
+    "$compiler" -c -o "$objname" "$file" -Wall -Wextra "$stdflag" $flags
+}
+
 cmd=$1
-if [ "$cmd" = "version" ];
-then
-    version;
-    exit 0;
+
+if [ "$cmd" = "version" ]; then
+    show_version
+    exit 0
 fi
 
-if [ "$cmd" = "license" ];
-then
-    license;
-    exit 0;
+if [ "$cmd" = "license" ]; then
+    show_license
+    exit 0
 fi
 
-if [ -z "$cmd" ];
-then
-    help_info;
-    exit 0;
+if [ -z "$cmd" ]; then
+    help_info
+    exit 0
 fi
 
-if [ "$cmd" = "help" ];
-then
+if [ "$cmd" = "help" ]; then
     subcmd=$2
 
-    if [ "$subcmd" = "version" ];
-    then
-        help_version;
-    elif [ "$subcmd" = "license" ];
-    then
-        help_license;
-    elif [ "$subcmd" = "help" ];
-    then
-        help_help;
-    elif [ "$subcmd" = "" ];
-    then
-        help_info;
-        exit 0;
+    if [ "$subcmd" = "version" ]; then
+        help_version
+    elif [ "$subcmd" = "license" ]; then
+        help_license
+    elif [ "$subcmd" = "help" ]; then
+        help_help
+    elif [ -z "$subcmd" ]; then
+        help_info
+        exit 0
     else
-        echo "Unknown subcommand: $2" >&2;
-        exit 1;
+        printf 'Unknown subcommand: %s\n' "$subcmd" >&2
+        exit 1
     fi
 
-    exit 0;
+    exit 0
 fi
 
-GCC=$GCC;
-if [ -z "$GCC" ];
-then
-    GCC="gcc";
+: "${GCC:=gcc}"
+: "${GXX:=g++}"
+: "${CLANG:=clang}"
+: "${CLANGXX:=clang++}"
+
+if [ "${CSTD-}" = "ansi" ]; then
+    CSTD=c89
+fi
+: "${CSTD:=c11}"
+: "${CXXSTD:=c++17}"
+: "${CFLAGS:=}"
+: "${CXXFLAGS:=}"
+
+check_c_standard "$CSTD"
+check_cpp_standard "$CXXSTD"
+
+if ! command -v "$GCC" >/dev/null 2>&1; then
+    printf 'Please install gcc\n' >&2
+    exit 1
 fi
 
-GXX=$GXX;
-if [ -z "$GXX" ];
-then
-    GXX="g++";
+if ! command -v "$GXX" >/dev/null 2>&1; then
+    printf 'Please install g++\n' >&2
+    exit 1
 fi
 
-CLANG=$CLANG;
-if [ -z "$CLANG" ];
-then
-    CLANG="clang";
+if ! command -v "$CLANG" >/dev/null 2>&1; then
+    printf 'Please install clang\n' >&2
+    exit 1
 fi
 
-CLANGXX=$CLANGXX;
-if [ -z "$CLANGXX" ];
-then
-    CLANGXX="clang++";
+if ! command -v "$CLANGXX" >/dev/null 2>&1; then
+    printf 'Please install clang++\n' >&2
+    exit 1
 fi
 
-CSTD=$CSTD;
-if [ "$CSTD" = "ansi" ];
-then
-    CSTD="c89";
-fi
+TMP_FILES=
+trap 'cleanup_tmp_files' EXIT HUP INT TERM
 
-if [ -z "$CSTD" ];
-then
-    CSTD="c11";
-fi
+printf 'Test target source against GCC\n'
+IS_WRONG=0
 
-check_c_standard "$CSTD";
+for file in "$@"; do
+    FILE_EXT=$(check_ext "$file")
 
-CXXSTD=$CXXSTD;
-if [ -z "$CXXSTD" ];
-then
-    CXXSTD="c++17";
-fi
-
-check_cpp_standard $CXXSTD;
-
-# Check whether GCC exists on the host.
-if ! command -v $GCC 2>/dev/null 1>&2;
-then
-    echo "Please install gcc";
-    exit 1;
-fi
-
-# Check whether `g++` exists on the host.
-if ! command -v $GXX 2>/dev/null 1>&2;
-then
-    echo "Please install g++";
-    exit 1;
-fi
-
-# Check whether Clang exists on the host.
-if ! command -v $CLANG 2>/dev/null 1>&2;
-then
-    echo "Please install clang";
-    exit 1;
-fi
-
-# Test the program with GCC.
-echo "Test target source against GCC";
-IS_WRONG=0;
-for file in "$@";
-do
-    FILE_EXT=$(check_ext "$file");
-
-    if [ "$FILE_EXT" = "$unsupported_file_extension" ];
-    then
-        echo "Unsupported file: ${file}" >&2;
-        continue;
+    if [ "$FILE_EXT" = "$unsupported_file_extension" ]; then
+        printf 'Unsupported file: %s\n' "$file" >&2
+        continue
     fi
 
-    filename=$(basename "$file");
-    objname=$(mktemp -t ${filename%$FILE_EXT}).o;
+    filename=$(basename -- "$file")
+    base=${filename%"$FILE_EXT"}
+    objname=$(make_obj_temp "$base") || exit 1
+    TMP_FILES="${TMP_FILES}${TMP_FILES:+ }$objname"
 
-    FILE_TYPE=$(check_file_type "$FILE_EXT");
+    FILE_TYPE=$(check_file_type "$FILE_EXT")
 
-    if [ "$FILE_TYPE" = "c" ];
-    then
-        $GCC -c -o $objname $file -Wall -Wextra -std=$CSTD $CFLAGS;
-        if [ "$?" -ne 0 ]; then IS_WRONG=1; fi
-    elif [ "$FILE_TYPE" = "c++" ];
-    then
-        $GXX -c -o $objname $file -Wall -Wextra -std=$CXXSTD $CXXFLAGS;
-        if [ "$?" -ne 0 ]; then IS_WRONG=1; fi
+    if [ "$FILE_TYPE" = "c" ]; then
+        if ! compile_with "$GCC" "-std=$CSTD" "$CFLAGS" "$file" "$objname"; then
+            IS_WRONG=1
+        fi
+    elif [ "$FILE_TYPE" = "c++" ]; then
+        if ! compile_with "$GXX" "-std=$CXXSTD" "$CXXFLAGS" "$file" "$objname"; then
+            IS_WRONG=1
+        fi
     fi
 done
 
-if [ "$IS_WRONG" -ne 0 ];
-then
-    echo "Wrong program compiled by GCC";
-    exit 1;
+if [ "$IS_WRONG" -ne 0 ]; then
+    printf 'Wrong program compiled by GCC\n' >&2
+    exit 1
 fi
 
-# Test the program with Clang.
-echo "Test target source against Clang";
-for file in "$@";
-do
-    FILE_EXT=$(check_ext $file);
+printf 'Test target source against Clang\n'
+IS_WRONG=0
 
-    FILE_EXT=$(check_ext "$file");
+for file in "$@"; do
+    FILE_EXT=$(check_ext "$file")
 
-    if [ "$FILE_EXT" = "$unsupported_file_extension" ];
-    then
-        echo "Unsupported file: ${file}" >&2;
-        continue;
+    if [ "$FILE_EXT" = "$unsupported_file_extension" ]; then
+        printf 'Unsupported file: %s\n' "$file" >&2
+        continue
     fi
 
-    filename=$(basename "$file");
-    objname=$(mktemp -t ${filename%$FILE_EXT}).o;
+    filename=$(basename -- "$file")
+    base=${filename%"$FILE_EXT"}
+    objname=$(make_obj_temp "$base") || exit 1
+    TMP_FILES="${TMP_FILES}${TMP_FILES:+ }$objname"
 
-    FILE_TYPE=$(check_file_type $FILE_EXT);
+    FILE_TYPE=$(check_file_type "$FILE_EXT")
 
-    if [ "$FILE_TYPE" = "c" ];
-    then
-        $CLANG -c -o $objname $file -Wall -Wextra -std=$CSTD $CFLAGS;
-        if [ "$?" -ne 0 ]; then IS_WRONG=1; fi
-    elif [ "$FILE_TYPE" = "c++" ];
-    then
-        $CLANGXX -c -o $objname $file -Wall -Wextra -std=$CXXSTD $CXXFLAGS;
-        if [ "$?" -ne 0 ]; then IS_WRONG=1; fi
+    if [ "$FILE_TYPE" = "c" ]; then
+        if ! compile_with "$CLANG" "-std=$CSTD" "$CFLAGS" "$file" "$objname"; then
+            IS_WRONG=1
+        fi
+    elif [ "$FILE_TYPE" = "c++" ]; then
+        if ! compile_with "$CLANGXX" "-std=$CXXSTD" "$CXXFLAGS" "$file" "$objname"; then
+            IS_WRONG=1
+        fi
     fi
 done
 
-if [ "$IS_WRONG" -ne 0 ];
-then
-    echo "Wrong program compiled by Clang";
-    exit 1;
+if [ "$IS_WRONG" -ne 0 ]; then
+    printf 'Wrong program compiled by Clang\n' >&2
+    exit 1
 fi
 
-exit 0;
+exit 0
