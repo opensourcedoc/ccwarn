@@ -108,9 +108,61 @@ All environment variables are optional, set with sensible default values.
 
 <del>`ccwarn` checks target source by compiling and executing it. Hence, DON'T USE `ccwarn` to test UNTRUSTED source.</del> Instead of running input source, `ccwarn` only compiles source into objects with warnings enabled now. Therefore, `main` function is not required to run `ccwarn`.
 
-## Note
+## Design Philosophy (Retrospective)
 
-If you just want to run some C or C++ source, see [ccrun](https://github.com/cwchentw/ccrun).
+`ccwarn` was originally written as a small utility to reduce the friction of checking compiler warnings across different toolchains.
+
+At the time, the goal was not to replace build systems like Make or CMake, but to provide a minimal and configuration-free way to answer a simple question:
+
+> *"Does this code compile cleanly across both GCC and Clang?"*
+
+### Why no project configuration?
+
+Traditional build systems require some level of setup, even for small experiments or one-off code snippets. `ccwarn` intentionally avoids any project configuration so that it can be used immediately on arbitrary source files.
+
+This makes it especially suitable for:
+
+- small code bases
+- quick experiments
+- portability checks
+- warning cleanup passes
+
+### Why GCC and Clang?
+
+Different compilers implement different diagnostics and may accept slightly different code, especially when extensions are involved.
+
+By testing against both GCC and Clang, `ccwarn` encourages writing code that is:
+
+- more portable
+- closer to the language standard
+- less reliant on compiler-specific behavior
+
+### Why compile-only?
+
+Earlier versions of `ccwarn` attempted to compile and execute input programs. This was later changed to compile-only behavior.
+
+This decision was made for two reasons:
+
+1. **Safety** – executing arbitrary code is unsafe, especially when the source is not trusted.
+2. **Scope** – the purpose of `ccwarn` is to check compilation warnings and standard conformance, not runtime behavior.
+
+### Scope and limitations
+
+`ccwarn` is intentionally limited in scope. It does not:
+
+- resolve complex dependencies
+- manage large multi-directory projects
+- replace build systems
+
+Instead, it focuses on being:
+
+- simple
+- predictable
+- zero-configuration
+
+## Related Tools
+
+If you are looking for a similar minimal tool to compile and run C/C++ programs, see [`ccrun`](https://github.com/cwchentw/ccrun).
 
 ## License
 
