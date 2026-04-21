@@ -188,21 +188,11 @@ build_common_flags() {
 }
 
 build_c_warning_flags() {
-    printf '%s\n' '\
--Wall -Wextra -Wpedantic \
--Wcast-qual -Wconversion -Wdouble-promotion -Wformat=2 \
--Winit-self -Wmissing-declarations -Wmissing-prototypes \
--Wold-style-definition -Wpointer-arith -Wshadow \
--Wstrict-prototypes -Wundef -Wvla -Wwrite-strings'
+    printf '%s\n' '-Wall -Wextra -Wpedantic -Wcast-qual -Wconversion -Wdouble-promotion -Wformat=2 -Winit-self -Wmissing-declarations -Wmissing-prototypes -Wold-style-definition -Wpointer-arith -Wshadow -Wstrict-prototypes -Wundef -Wvla -Wwrite-strings'
 }
 
 build_cxx_warning_flags() {
-    printf '%s\n' '\
--Wall -Wextra -Wpedantic \
--Wcast-qual -Wconversion -Wctor-dtor-privacy -Wdouble-promotion \
--Wformat=2 -Wnon-virtual-dtor -Wold-style-cast \
--Woverloaded-virtual -Wshadow -Wsign-conversion \
--Wundef -Wzero-as-null-pointer-constant'
+    printf '%s\n' '-Wall -Wextra -Wpedantic -Wcast-qual -Wconversion -Wctor-dtor-privacy -Wdouble-promotion -Wformat=2 -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual -Wshadow -Wsign-conversion -Wundef -Wzero-as-null-pointer-constant'
 }
 
 compile_with() {
