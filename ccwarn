@@ -3,9 +3,10 @@
 # ccwarn - Check C or C++ code base against both GCC and Clang.
 #
 # Copyright (c) 2019-2022 Michelle Chen.  Licensed under MIT
+# Modified with safer default standards and warning profiles.
 
 program=$0
-VERSION=0.4.0
+VERSION=0.5.0
 LICENSE_NAME=MIT
 
 unsupported_file_extension=unknown
@@ -35,9 +36,13 @@ help_info() {
     printf '\tCLANG\t\tSet Clang compiler\n'
     printf '\tCLANGXX\t\tSet Clang++ compiler\n'
     printf '\tCSTD\t\tSet C standard, default to C11\n'
-    printf '\tCXXSTD\t\tSet C++ standard, default to C++17\n'
+    printf '\tCXXSTD\t\tSet C++ standard, default to C++20\n'
     printf '\tCFLAGS\t\tCustom include paths and compiler flags for C\n'
     printf '\tCXXFLAGS\tCustom include paths and compiler flags for C++\n'
+    printf '\tDEBUG\t\t1 to enable debug info and disable optimization (default: 1)\n'
+    printf '\tSANITIZE\t1 to enable sanitizers (default: 1)\n'
+    printf '\tWERROR\t\t1 to treat warnings as errors (default: 1)\n'
+    printf '\tOPTLEVEL\tOptimization level when DEBUG=0 (default: -O2)\n'
 }
 
 help_version() {
@@ -112,7 +117,7 @@ check_c_standard() {
     fi
 
     case "$std" in
-        c89|c90|c99|c9x|c11|c1x|c17|c18|c2x)
+        c89|c90|c99|c9x|c11|c1x|c17|c18|c2x|c23)
             ;;
         *)
             printf 'Unsupported C standard: %s\n' "$1" >&2
@@ -131,7 +136,7 @@ check_cpp_standard() {
     fi
 
     case "$std" in
-        c++98|c++03|c++11|c++0x|c++14|c++1y|c++17|c++1z|c++2a)
+        c++98|c++03|c++11|c++0x|c++14|c++1y|c++17|c++1z|c++20|c++2a|c++23|c++2b)
             ;;
         *)
             printf 'Unsupported C++ standard: %s\n' "$1" >&2
@@ -155,6 +160,51 @@ make_obj_temp() {
     fi
 }
 
+build_common_flags() {
+    out=
+
+    : "${DEBUG:=1}"
+    : "${SANITIZE:=1}"
+    : "${WERROR:=1}"
+    : "${OPTLEVEL:=-O2}"
+
+    if [ "$DEBUG" = "1" ]; then
+        out="$out -O0 -g3"
+    else
+        out="$out $OPTLEVEL"
+    fi
+
+    out="$out -pipe -fno-omit-frame-pointer"
+
+    if [ "$WERROR" = "1" ]; then
+        out="$out -Werror"
+    fi
+
+    if [ "$SANITIZE" = "1" ]; then
+        out="$out -fsanitize=address,undefined"
+    fi
+
+    printf '%s\n' "$out"
+}
+
+build_c_warning_flags() {
+    printf '%s\n' '\
+-Wall -Wextra -Wpedantic \
+-Wcast-qual -Wconversion -Wdouble-promotion -Wformat=2 \
+-Winit-self -Wmissing-declarations -Wmissing-prototypes \
+-Wold-style-definition -Wpointer-arith -Wshadow \
+-Wstrict-prototypes -Wundef -Wvla -Wwrite-strings'
+}
+
+build_cxx_warning_flags() {
+    printf '%s\n' '\
+-Wall -Wextra -Wpedantic \
+-Wcast-qual -Wconversion -Wctor-dtor-privacy -Wdouble-promotion \
+-Wformat=2 -Wnon-virtual-dtor -Wold-style-cast \
+-Woverloaded-virtual -Wshadow -Wsign-conversion \
+-Wundef -Wzero-as-null-pointer-constant'
+}
+
 compile_with() {
     compiler=$1
     stdflag=$2
@@ -163,7 +213,7 @@ compile_with() {
     objname=$5
 
     # shellcheck disable=SC2086
-    "$compiler" -c -o "$objname" "$file" -Wall -Wextra "$stdflag" $flags
+    "$compiler" -c -o "$objname" "$file" $stdflag $flags
 }
 
 cmd=$1
@@ -212,7 +262,7 @@ if [ "${CSTD-}" = "ansi" ]; then
     CSTD=c89
 fi
 : "${CSTD:=c11}"
-: "${CXXSTD:=c++17}"
+: "${CXXSTD:=c++20}"
 : "${CFLAGS:=}"
 : "${CXXFLAGS:=}"
 
@@ -239,6 +289,10 @@ if ! command -v "$CLANGXX" >/dev/null 2>&1; then
     exit 1
 fi
 
+COMMON_FLAGS=$(build_common_flags)
+C_WARNING_FLAGS=$(build_c_warning_flags)
+CXX_WARNING_FLAGS=$(build_cxx_warning_flags)
+
 TMP_FILES=
 trap 'cleanup_tmp_files' EXIT HUP INT TERM
 
@@ -261,11 +315,13 @@ for file in "$@"; do
     FILE_TYPE=$(check_file_type "$FILE_EXT")
 
     if [ "$FILE_TYPE" = "c" ]; then
-        if ! compile_with "$GCC" "-std=$CSTD" "$CFLAGS" "$file" "$objname"; then
+        ALL_C_FLAGS="$COMMON_FLAGS $C_WARNING_FLAGS $CFLAGS"
+        if ! compile_with "$GCC" "-std=$CSTD" "$ALL_C_FLAGS" "$file" "$objname"; then
             IS_WRONG=1
         fi
     elif [ "$FILE_TYPE" = "c++" ]; then
-        if ! compile_with "$GXX" "-std=$CXXSTD" "$CXXFLAGS" "$file" "$objname"; then
+        ALL_CXX_FLAGS="$COMMON_FLAGS $CXX_WARNING_FLAGS $CXXFLAGS"
+        if ! compile_with "$GXX" "-std=$CXXSTD" "$ALL_CXX_FLAGS" "$file" "$objname"; then
             IS_WRONG=1
         fi
     fi
@@ -295,11 +351,13 @@ for file in "$@"; do
     FILE_TYPE=$(check_file_type "$FILE_EXT")
 
     if [ "$FILE_TYPE" = "c" ]; then
-        if ! compile_with "$CLANG" "-std=$CSTD" "$CFLAGS" "$file" "$objname"; then
+        ALL_C_FLAGS="$COMMON_FLAGS $C_WARNING_FLAGS $CFLAGS"
+        if ! compile_with "$CLANG" "-std=$CSTD" "$ALL_C_FLAGS" "$file" "$objname"; then
             IS_WRONG=1
         fi
     elif [ "$FILE_TYPE" = "c++" ]; then
-        if ! compile_with "$CLANGXX" "-std=$CXXSTD" "$CXXFLAGS" "$file" "$objname"; then
+        ALL_CXX_FLAGS="$COMMON_FLAGS $CXX_WARNING_FLAGS $CXXFLAGS"
+        if ! compile_with "$CLANGXX" "-std=$CXXSTD" "$ALL_CXX_FLAGS" "$file" "$objname"; then
             IS_WRONG=1
         fi
     fi

@@ -1,6 +1,8 @@
 # ccwarn
 
-`ccwarn`, aka *C* and *C*++ *Warn*ings, tests C or C++ source against both GCC and Clang automatically.
+`ccwarn`, aka *C* and *C*++ *Warn*ings, is a **strict and opinionated** tool that tests C or C++ source against both GCC and Clang.
+
+It is designed as a **teaching aid and coding discipline enforcer**, not a full build system.
 
 ## Why `ccwarn`?
 
@@ -16,154 +18,82 @@ In addition to code warnings, `ccwarn` can be used to test language standard con
 
 `ccwarn` itself is written in POSIX shell. Besides a shell, `ccwarn` depends on both GCC and Clang.
 
-`ccwarn` will check these dependencies, emitting an error message if neither is installed on your system.
-
-We tested `ccwarn` against several Unix variants:
-
-* macOS Big Sur
-* Ubuntu 20.04 LTS
-* Rocky Linux 8.5
-* openSUSE Leap 15.3
-* FreeBSD 13.0
-
-It should work on other Unix systems as well.
-
 ## Supported File Formats
 
-`ccwarn` supports the following file formats:
-
-* *.c* for C source
-* *.cpp*, *.cxx* or *.cc* for C++ source
-
-`ccwarn` can handle projects that mix C and C++ together.
+- *.c* for C source
+- *.cpp*, *.cxx* or *.cc* for C++ source
 
 ## Supported Language Standards
 
 ### C Standards
 
-* C89: `c89`, `c90`, `ansi`
-* C99: `c99`, `c9x`
-* C11: `c11`, `c1x`
-* C17: `c17`, `c18`
-* C20: `c2x`
+- C89 / C90 / ANSI
+- C99
+- C11
+- C17 / C18
+- C23
 
 ### C++ Standards
 
-* C++98: `c++98`, `c++03`
-* C++11: `c++11`, `c++0x`
-* C++14: `c++14`, `c++1y`
-* C++17: `c++17`, `c++1z`
-* C++20: `c++2a`
+- C++98 / C++03
+- C++11
+- C++14
+- C++17
+- C++20
+- C++23
 
 ## Usage
 
-Before using `ccwarn`, add executable mode to it:
-
-```
-$ chmod +x path/to/ccwarn
+```sh
+./ccwarn path/to/*.c path/to/*.cpp
 ```
 
-Then, copy `ccwarn` to a valid **$PATH** like *$HOME/bin* or */usr/local/bin* to use it.
+## Warning Policy
 
-Test single C file:
+`ccwarn` enforces a **strict but practical** warning policy.
 
-```
-$ ccwarn path/to/file.c
-```
+### Enabled warnings
 
-Test multiple files in a project:
+- -Wall -Wextra -Wpedantic
+- -Wconversion
+- -Wsign-conversion
+- -Wshadow
+- -Wformat=2
+- -Wnull-dereference
 
-```
-$ ccwarn path/to/*.c
-```
+### Treated as errors
 
-Test for C and C++ mixed code base:
-
-```
-$ ccwarn path/to/*.c path/to/*.cpp
-```
-
-Show help info:
-
-```
-$ ccwarn help
-```
+- -Werror=conversion
+- -Werror=sign-conversion
+- -Werror=format=2
 
 ## Environment Variables
 
-You can adjust the behavior of `ccwarn` with the following environment variables:
+- GCC / GXX / CLANG / CLANGXX
+- CSTD (default: c11)
+- CXXSTD (default: c++20)
+- CFLAGS / CXXFLAGS
 
-* **GCC** to set GCC compiler
-* **GXX** to set G++ compiler
-* **CLANG** to set Clang compiler
-* **CLANGXX** to set Clang++ compiler
-* **CSTD** to set C standard, default to C11
-* **CXXSTD** to set C++ standard, default to C++17
-* **CFLAGS** to set custom include paths and compiler flags for C
-* **CXXFLAGS** to set custom include paths and compiler flags for C++
+## Philosophy
 
-All environment variables are optional, set with sensible default values.
+This tool enforces:
 
-## Breaking Changes
+- explicit over implicit
+- no unsafe conversions
+- portability across compilers
+- warnings treated as potential bugs
 
-<del>`ccwarn` checks target source by compiling and executing it. Hence, DON'T USE `ccwarn` to test UNTRUSTED source.</del> Instead of running input source, `ccwarn` only compiles source into objects with warnings enabled now. Therefore, `main` function is not required to run `ccwarn`.
+## Intended Use
 
-## Design Philosophy (Retrospective)
+Best for:
 
-`ccwarn` was originally written as a small utility to reduce the friction of checking compiler warnings across different toolchains.
+- small programs
+- exercises
+- learning projects
+- warning cleanup
 
-At the time, the goal was not to replace build systems like Make or CMake, but to provide a minimal and configuration-free way to answer a simple question:
-
-> *"Does this code compile cleanly across both GCC and Clang?"*
-
-### Why no project configuration?
-
-Traditional build systems require some level of setup, even for small experiments or one-off code snippets. `ccwarn` intentionally avoids any project configuration so that it can be used immediately on arbitrary source files.
-
-This makes it especially suitable for:
-
-- small code bases
-- quick experiments
-- portability checks
-- warning cleanup passes
-
-### Why GCC and Clang?
-
-Different compilers implement different diagnostics and may accept slightly different code, especially when extensions are involved.
-
-By testing against both GCC and Clang, `ccwarn` encourages writing code that is:
-
-- more portable
-- closer to the language standard
-- less reliant on compiler-specific behavior
-
-### Why compile-only?
-
-Earlier versions of `ccwarn` attempted to compile and execute input programs. This was later changed to compile-only behavior.
-
-This decision was made for two reasons:
-
-1. **Safety** – executing arbitrary code is unsafe, especially when the source is not trusted.
-2. **Scope** – the purpose of `ccwarn` is to check compilation warnings and standard conformance, not runtime behavior.
-
-### Scope and limitations
-
-`ccwarn` is intentionally limited in scope. It does not:
-
-- resolve complex dependencies
-- manage large multi-directory projects
-- replace build systems
-
-Instead, it focuses on being:
-
-- simple
-- predictable
-- zero-configuration
-
-## Related Tools
-
-If you are looking for a similar minimal tool to compile and run C/C++ programs, see [`ccrun`](https://github.com/cwchentw/ccrun).
+Not intended for large production codebases.
 
 ## License
 
-Copyright (c) 2019-2022 Michelle Chen; licensed under [MIT](https://opensource.org/licenses/MIT).
+MIT
